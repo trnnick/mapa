@@ -11,6 +11,7 @@ Functions and wrappers for using the Multiple Aggregation Prediction Algorithm (
 To install use:
 
 > if (!require("devtools")){install.packages("devtools")}
+
 > devtools::install_github("trnnick/mapa")
 
 _Happy forecasting!_
