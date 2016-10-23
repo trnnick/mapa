@@ -1,0 +1,17 @@
+
+import(forecast,parallel,RColorBrewer)
+importFrom("grDevices", "col2rgb", "heat.colors", "rainbow", "rgb", "colorRampPalette")
+importFrom("graphics", "axis", "image", "layout", "legend", "lines", "plot", "points", "polygon", "text", "box")
+importFrom("stats", "frequency", "median", "qnorm", "ts")
+importFrom("utils", "tail")
+importFrom("smooth", "es")
+
+export(mapa,mapasimple,mapaest,mapacalc,mapafor,tsaggr,plotmapa)
+
+S3method(plot,mapa.fit)
+S3method(print,mapa.fit)
+S3method(summary,mapa.fit)
+S3method(print,mapa.calc)
+S3method(summary,mapa.calc)
+S3method(print,mapa.for)
+S3method(summary,mapa.for)
