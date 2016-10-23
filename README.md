@@ -18,7 +18,3 @@ To install use:
 > devtools::install_github("trnnick/mapa")
 
 _Happy forecasting!_
-
-Total downloads
-
-[![Downloads](http://cranlogs.r-pkg.org/badges/grand-total/MAPA)](https://CRAN.R-project.org/package=MAPA)
