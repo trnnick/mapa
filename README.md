@@ -2,6 +2,7 @@ Mutliple Aggregation Prediction Algorithm (MAPA)
 =======
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/MAPA)](https://CRAN.R-project.org/package=MAPA)
 [![Downloads](http://cranlogs.r-pkg.org/badges/MAPA)](https://CRAN.R-project.org/package=MAPA)
+[![Downloads](http://cranlogs.r-pkg.org/badges/grand-total/MAPA)](https://CRAN.R-project.org/package=MAPA)
 
 Development repository for the MAPA package for R.
 Stable version can be found at: https://cran.r-project.org/web/packages/MAPA/index.html
