@@ -143,7 +143,7 @@ mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb,fit.error=NULL){
                                  colSums(season * wghts.season)),na.rm=TRUE)
     } else {
       # Inverse MSE
-      wghts <- (1/fit.error)
+      wghts <- fit.error
       wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
       wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
       fh <- dim(level)[2]
@@ -167,7 +167,7 @@ mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb,fit.error=NULL){
       forecasts <- sum(c(sum(FCs[perm_levels==1, 2, ]*wghts.level), sum(FCs[perm_levels==1, 3, ]*wghts.level),
                          sum(FCs[(perm_levels==1 & perm_seas==1), 4, ]*wghts.season)),na.rm=TRUE)
     } else {
-      wghts <- (1/fit.error)
+      wghts <- fit.error
       wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
       wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
       forecasts <- sum(c(sum(FCs[perm_levels==1, 2, ]*wghts.level), sum(FCs[perm_levels==1, 3, ]*wghts.level),
