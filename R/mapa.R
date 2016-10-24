@@ -91,7 +91,7 @@ mapa <- function(y, ppy=NULL, fh=ppy, ifh=1, minimumAL=1, maximumAL=ppy,
 }
 
 #-------------------------------------------------
-mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb,fit.error=NULL){
+mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb){
 # This function combines the translated ets states
   
   # perm_levels is not needed for forecasting. This is already checked in the estimation.
@@ -142,9 +142,8 @@ mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb,fit.error=NULL){
       forecasts <- colSums(rbind(colSums(level * wghts.level),colSums(trend * wghts.level),
                                  colSums(season * wghts.season)),na.rm=TRUE)
     } else {
-      # Inverse MSE
-      wghts <- fit.error
-      wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
+      wghts <- 1/(minimumAL:maximumAL)
+      wghts.level <- rep(1,sum(perm_levels==1))/sum(perm_levels==1)
       wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
       fh <- dim(level)[2]
       wghts.level <- matrix(rep(wghts.level,fh),ncol=fh)
@@ -167,8 +166,8 @@ mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb,fit.error=NULL){
       forecasts <- sum(c(sum(FCs[perm_levels==1, 2, ]*wghts.level), sum(FCs[perm_levels==1, 3, ]*wghts.level),
                          sum(FCs[(perm_levels==1 & perm_seas==1), 4, ]*wghts.season)),na.rm=TRUE)
     } else {
-      wghts <- fit.error
-      wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
+      wghts <- 1/(minimumAL:maximumAL)
+      wghts.level <- rep(1,sum(perm_levels==1))/sum(perm_levels==1)
       wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
       forecasts <- sum(c(sum(FCs[perm_levels==1, 2, ]*wghts.level), sum(FCs[perm_levels==1, 3, ]*wghts.level),
                          sum(FCs[(perm_levels==1 & perm_seas==1), 4, ]*wghts.season)),na.rm=TRUE)
