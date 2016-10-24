@@ -204,8 +204,15 @@ mapacalc <- function(y, mapafit, fh=0, comb=c("mean", "median", "wght"),
     
   }
   
+  # Get fit errors
+  if (ets.type == "ets"){
+    fit.error <- unlist(mapafit[,colnames(mapafit)=="sigma2"])
+  } else {
+    fit.error <- unlist(mapafit[,colnames(mapafit)=="s2"])
+  }
+  
   # MAPA combination
-  combres <- mapacomb(minimumAL,maximumAL,ppy,FCs,comb)
+  combres <- mapacomb(minimumAL,maximumAL,ppy,FCs,comb,fit.error)
   forecasts <- combres$forecasts
   perm_levels <- combres$perm_levels
   perm_seas <- combres$perm_seas

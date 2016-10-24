@@ -91,7 +91,7 @@ mapa <- function(y, ppy=NULL, fh=ppy, ifh=1, minimumAL=1, maximumAL=ppy,
 }
 
 #-------------------------------------------------
-mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb){
+mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb,fit.error=NULL){
 # This function combines the translated ets states
   
   # perm_levels is not needed for forecasting. This is already checked in the estimation.
@@ -131,9 +131,19 @@ mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb){
       #                            colMedians(season)),na.rm=TRUE) # MAPA(median) forecasts
       forecasts <- colSums(rbind(apply(level,2,"median"),apply(trend,2,"median"),
                                  apply(season,2,"median")),na.rm=TRUE) # MAPA(median) forecasts
-    } else {
+    } else if (comb=="wght"){
       # Weighted sum
       wghts <- 1/(minimumAL:maximumAL)
+      wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
+      wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
+      fh <- dim(level)[2]
+      wghts.level <- matrix(rep(wghts.level,fh),ncol=fh)
+      wghts.season <- matrix(rep(wghts.season,fh),ncol=fh)
+      forecasts <- colSums(rbind(colSums(level * wghts.level),colSums(trend * wghts.level),
+                                 colSums(season * wghts.season)),na.rm=TRUE)
+    } else {
+      # Inverse MSE
+      wghts <- (1/fit.error)
       wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
       wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
       fh <- dim(level)[2]
@@ -149,9 +159,15 @@ mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb){
     } else if (comb=="median"){
       forecasts <- colSums(rbind(median(FCs[perm_levels==1, 2, ]),median(FCs[perm_levels==1, 3, ]),
 		    median(FCs[(perm_levels==1 & perm_seas==1), 4, ])), na.rm=TRUE) # MAPA(median) forecasts
-    } else {
+    } else if (comb=="wght"){
       # Weighted sum
       wghts <- 1/(minimumAL:maximumAL)
+      wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
+      wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
+      forecasts <- sum(c(sum(FCs[perm_levels==1, 2, ]*wghts.level), sum(FCs[perm_levels==1, 3, ]*wghts.level),
+                         sum(FCs[(perm_levels==1 & perm_seas==1), 4, ]*wghts.season)),na.rm=TRUE)
+    } else {
+      wghts <- (1/fit.error)
       wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
       wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
       forecasts <- sum(c(sum(FCs[perm_levels==1, 2, ]*wghts.level), sum(FCs[perm_levels==1, 3, ]*wghts.level),
