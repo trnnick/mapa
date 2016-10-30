@@ -2,7 +2,7 @@
 import(forecast,parallel,RColorBrewer)
 importFrom("grDevices", "col2rgb", "heat.colors", "rainbow", "rgb", "colorRampPalette")
 importFrom("graphics", "axis", "image", "layout", "legend", "lines", "plot", "points", "polygon", "text", "box")
-importFrom("stats", "frequency", "median", "qnorm", "ts")
+importFrom("stats", "frequency", "median", "qnorm", "ts", "prcomp", "sd")
 importFrom("utils", "tail")
 importFrom("smooth", "es")
 

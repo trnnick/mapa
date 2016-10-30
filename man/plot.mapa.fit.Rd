@@ -7,12 +7,16 @@ The following function plots the fitted components at each aggregation
 level of an estimated MAPA. The plot is the same as the one that can be produced optionally by mapaest.
 }
 \usage{
-  \method{plot}{mapa.fit}(x, ...)
+  \method{plot}{mapa.fit}(x, xreg.plot=c(TRUE,FALSE),...)
 }
 \arguments{
   \item{x}{
     Fitted MAPA model (from mapaest).
   }
+  \item{xreg.plot}{
+    Add infromation about xreg in the figure. 
+  }
+  
   \item{...}{
     Additional arguments.
   }

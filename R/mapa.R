@@ -4,7 +4,8 @@
 #-------------------------------------------------
 mapa <- function(y, ppy=NULL, fh=ppy, ifh=1, minimumAL=1, maximumAL=ppy, 
 	comb=c("mean","median","wght"), paral=c(0,1,2), display=c(0,1), outplot=c(1,0), 
-	hybrid=c(TRUE,FALSE), model="ZZZ", type=c("ets","es"), conf.lvl=NULL, ...){
+	hybrid=c(TRUE,FALSE), model="ZZZ", type=c("ets","es"), conf.lvl=NULL, 
+	xreg=NULL, pr.comp=0, ...){
 # Wrapper to estimate and produce MAPA in- and out-of-sample forecasts
 # Uses mapaest and mapafor
 #  
@@ -45,6 +46,14 @@ mapa <- function(y, ppy=NULL, fh=ppy, ifh=1, minimumAL=1, maximumAL=ppy,
 #   conf.lvl    = Vector of confidence level for prediction intervals. Values must be (0,1). 
 #                 If conf.lvl == NULL then no intervals are calculated. For example to get 
 #                 the intervals for 80% and 95% use conf.lvl=c(0.8,0.95).
+#   xreg        = Vector or matrix of exogenous variables to be included in the MAPA. 
+#                 If matrix then rows are observations and columns are variables. 
+#                 Must be at least as long as in-sample. Additional observations are unused.
+#                 Note that including xreg will force type="es". 
+#   pr.comp     = MAPAx can use principal component analysis to preprocess xreg. When comp is -1 
+#                 then the number of retained components is chosen automatically. When comp=0 
+#                 then no pre-processing is performed and the original xreg is used. Any other 
+#                 value represents the number of principal components retained. 
 #   ...         = Pass additional arguments to es and ets.
 #
 # Output:
@@ -75,16 +84,17 @@ mapa <- function(y, ppy=NULL, fh=ppy, ifh=1, minimumAL=1, maximumAL=ppy,
   # Estimate MAPA
   mapafit <- mapaest(y=y, ppy=ppy, minimumAL=minimumAL, 
                      maximumAL=maximumAL, paral=paral, display=display, 
-                     outplot=outplot, model=model, type=type, ...)
+                     outplot=outplot, model=model, type=type, xreg=xreg, pr.comp=pr.comp, ...)
   
   # If not horizon was given forecasts a full season
   if (is.null(fh)){
-    fh <- as.numeric(tail(mapafit[1,],2)[1])
+    idx.ppy <- which(colnames(mapafit)=="original.ppy")
+    fh <- as.numeric(mapafit[1,idx.ppy])
   }
   
   # Produce in- and out-of-sample forecasts
   out <- mapafor(y=y, mapafit=mapafit, fh=fh, ifh=ifh, comb=comb, 
-                 outplot=outplot, hybrid=hybrid, conf.lvl=conf.lvl)
+                 outplot=outplot, hybrid=hybrid, conf.lvl=conf.lvl, xreg=xreg)
   
   return(out)
   
@@ -113,6 +123,7 @@ mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb){
     level <- FCs[perm_levels==1, 2, ]
     trend <- FCs[perm_levels==1, 3, ]
     season <- FCs[(perm_levels==1 & perm_seas==1), 4, ]
+    xreg <- FCs[perm_levels==1, 5, ]
     # Check that all are arrays
     if (!is.array(level)){
       level <- array(level,c(1,length(level)))
@@ -123,14 +134,17 @@ mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb){
     if (!is.array(season)){
       season <- array(season,c(1,length(season)))
     }
+    if (!is.array(xreg)){
+      trend <- array(xreg,c(1,length(xreg)))
+    }
     if (comb=="mean"){ # alternative averaging operators
       forecasts <- colSums(rbind(colMeans(level),colMeans(trend),
-                                 colMeans(season)),na.rm=TRUE) # MAPA(mean) forecasts
+                                 colMeans(season),colMeans(xreg)),na.rm=TRUE) # MAPA(mean) forecasts
     } else if (comb=="median"){
       # forecasts <- colSums(rbind(colMedians(level),colMedians(trend),
       #                            colMedians(season)),na.rm=TRUE) # MAPA(median) forecasts
       forecasts <- colSums(rbind(apply(level,2,"median"),apply(trend,2,"median"),
-                                 apply(season,2,"median")),na.rm=TRUE) # MAPA(median) forecasts
+                                 apply(season,2,"median"),apply(xreg,2,"median")),na.rm=TRUE) # MAPA(median) forecasts
     } else if (comb=="wght"){
       # Weighted sum
       wghts <- 1/(minimumAL:maximumAL)
@@ -140,7 +154,7 @@ mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb){
       wghts.level <- matrix(rep(wghts.level,fh),ncol=fh)
       wghts.season <- matrix(rep(wghts.season,fh),ncol=fh)
       forecasts <- colSums(rbind(colSums(level * wghts.level),colSums(trend * wghts.level),
-                                 colSums(season * wghts.season)),na.rm=TRUE)
+                                 colSums(season * wghts.season),colSums(xreg * wghts.level)),na.rm=TRUE)
     } else {
       wghts <- 1/(minimumAL:maximumAL)
       wghts.level <- rep(1,sum(perm_levels==1))/sum(perm_levels==1)
@@ -149,28 +163,30 @@ mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb){
       wghts.level <- matrix(rep(wghts.level,fh),ncol=fh)
       wghts.season <- matrix(rep(wghts.season,fh),ncol=fh)
       forecasts <- colSums(rbind(colSums(level * wghts.level),colSums(trend * wghts.level),
-                                 colSums(season * wghts.season)),na.rm=TRUE)
+                                 colSums(season * wghts.season),colSums(xreg * wghts.level)),na.rm=TRUE)
     }
   } else {
     if (comb=="mean"){ # alternative averaging operators
       forecasts <- colSums(rbind(mean(FCs[perm_levels==1, 2, ]),mean(FCs[perm_levels==1, 3, ]),
-		    mean(FCs[(perm_levels==1 & perm_seas==1), 4, ])), na.rm=TRUE) # MAPA(mean) forecasts
+		    mean(FCs[(perm_levels==1 & perm_seas==1), 4, ]),mean(FCs[perm_levels==1, 5, ])), na.rm=TRUE) # MAPA(mean) forecasts
     } else if (comb=="median"){
       forecasts <- colSums(rbind(median(FCs[perm_levels==1, 2, ]),median(FCs[perm_levels==1, 3, ]),
-		    median(FCs[(perm_levels==1 & perm_seas==1), 4, ])), na.rm=TRUE) # MAPA(median) forecasts
+		    median(FCs[(perm_levels==1 & perm_seas==1), 4, ]),median(FCs[perm_levels==1, 5, ])), na.rm=TRUE) # MAPA(median) forecasts
     } else if (comb=="wght"){
       # Weighted sum
       wghts <- 1/(minimumAL:maximumAL)
       wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
       wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
       forecasts <- sum(c(sum(FCs[perm_levels==1, 2, ]*wghts.level), sum(FCs[perm_levels==1, 3, ]*wghts.level),
-                         sum(FCs[(perm_levels==1 & perm_seas==1), 4, ]*wghts.season)),na.rm=TRUE)
+                         sum(FCs[(perm_levels==1 & perm_seas==1), 4, ]*wghts.season),
+                         sum(FCs[perm_levels==1, 5, ]*wghts.level)),na.rm=TRUE)
     } else {
       wghts <- 1/(minimumAL:maximumAL)
       wghts.level <- rep(1,sum(perm_levels==1))/sum(perm_levels==1)
       wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
       forecasts <- sum(c(sum(FCs[perm_levels==1, 2, ]*wghts.level), sum(FCs[perm_levels==1, 3, ]*wghts.level),
-                         sum(FCs[(perm_levels==1 & perm_seas==1), 4, ]*wghts.season)),na.rm=TRUE)
+                         sum(FCs[(perm_levels==1 & perm_seas==1), 4, ]*wghts.season),
+                         sum(FCs[perm_levels==1, 5, ]*wghts.level)),na.rm=TRUE)
     }
   }
   
@@ -192,6 +208,11 @@ mapaplot <- function(outplot,FCs,minimumAL,maximumAL,perm_levels,perm_seas,
     } else {
       FCseason <- NULL
     }
+    FCxreg <- FCs[perm_levels==1, 5, ]
+    if (all(FCxreg == 0)){
+      FCxreg <- NULL
+    }
+
     # Check that all are arrays
     if (!is.array(FClevel)){
       FClevel <- array(FClevel,c(length(FClevel)/fh,fh))
@@ -202,9 +223,15 @@ mapaplot <- function(outplot,FCs,minimumAL,maximumAL,perm_levels,perm_seas,
     if (!is.array(FCseason) && !is.null(FCseason)){
       FCseason <- array(FCseason,c(length(FCseason)/fh,fh))
     }
+    if (!is.array(FCxreg) && !is.null(FCxreg)){
+      FCxreg <- array(FCxreg,c(length(FCxreg)/fh,fh))
+    }
+    
     clrs <- colorRampPalette(brewer.pal(11,"Spectral")[c(1:5,8:11)])(length(perm_levels))
     if (outplot == 2){
-      if (!is.null(FCseason)){
+      if (!is.null(FCseason) & !is.null(FCxreg)){
+        layout(matrix(c(1,1,1,1,2,3,4,5), 2, 4, byrow = TRUE))
+      } else if (!is.null(FCseason) | !is.null(FCxreg)){
         layout(matrix(c(1,1,1,2,3,4), 2, 3, byrow = TRUE))
       } else {
         layout(matrix(c(1,1,2,3), 2, 2, byrow = TRUE))
@@ -284,6 +311,26 @@ mapaplot <- function(outplot,FCs,minimumAL,maximumAL,perm_levels,perm_seas,
         }
         lines(FCseason.plot, type="l", col="black", lwd=2)
       }
+      # Plot xreg
+      if (!is.null(FCxreg)){
+        ymin <- min(FCxreg)
+        ymax <- max(FCxreg)
+        yminmax <- c(ymin - 0.1*(ymax-ymin),ymax + 0.1*(ymax-ymin))
+        plot(FCxreg[1, ], type="l", col=clrs[1], xlab="", ylab="", main="Xreg", ylim=yminmax)
+        if (dim(FCxreg)[1]>1){
+          for (i in 2:sum(perm_levels==1)){
+            lines(FCxreg[i, ], type="l", col=clrs[i])
+          }
+        }
+        if (comb=="mean"){
+          FCxreg.plot <- colMeans(FCxreg)
+        } else if (comb=="median"){
+          FCxreg.plot <- apply(FCxreg,2,"median")
+        } else {
+          FCxreg.plot <- colSums(FCxreg * wghts.level)
+        }
+        lines(FCxreg.plot, type="l", col="black", lwd=2)
+      }
     }
   }
 }
@@ -291,7 +338,7 @@ mapaplot <- function(outplot,FCs,minimumAL,maximumAL,perm_levels,perm_seas,
 #-------------------------------------------------
 mapasimple <- function(y, ppy=NULL, fh=ppy, minimumAL=1, maximumAL=ppy, comb=c("mean","median","wght"), 
                        paral=c(0,1,2), display=c(0,1), outplot=c(1,0), hybrid=c(TRUE,FALSE), 
-                       model="ZZZ", type=c("ets","es"),...){
+                       model="ZZZ", type=c("ets","es"), xreg=NULL, pr.comp=0, ...){
   # MAPA estimation and forecast
   #  
   # Inputs:
@@ -330,6 +377,14 @@ mapasimple <- function(y, ppy=NULL, fh=ppy, minimumAL=1, maximumAL=ppy, comb=c("
   #                 1 then a non-seasonal model is estimated.
   #   type        = What type of exponential smoothing implementation to use. "es" - use from 
   #                 the smooth package; "ets" use from the forecast package
+  #   xreg        = Vector or matrix of exogenous variables to be included in the MAPA. 
+  #                 If matrix then rows are observations and columns are variables. 
+  #                 Must be at least as long as in-sample. Additional observations are unused.
+  #                 Note that including xreg will force type="es". 
+  #   pr.comp     = MAPAx can use principal component analysis to preprocess xreg. When comp is -1 
+  #                 then the number of retained components is chosen automatically. When comp=0 
+  #                 then no pre-processing is performed and the original xreg is used. Any other 
+  #                 value represents the number of principal components retained. 
   #   ...         = Pass additional arguments to es and ets.
   #
   # Output:
@@ -357,17 +412,68 @@ mapasimple <- function(y, ppy=NULL, fh=ppy, minimumAL=1, maximumAL=ppy, comb=c("
   # Estimate MAPA
   mapafit <- mapaest(y=y, ppy=ppy, minimumAL=minimumAL, 
                      maximumAL=maximumAL, paral=paral, display=display, 
-                     outplot=outplot, model=model, type=type,...)
+                     outplot=outplot, model=model, type=type, xreg=xreg, pr.comp=pr.comp, ...)
   
   # If not horizon was given forecasts a full season
   if (is.null(fh)){
-    fh <- as.numeric(tail(mapafit[1,],2)[1])
+    idx.ppy <- which(colnames(mapafit)=="original.ppy")
+    fh <- as.numeric(mapafit[1,idx.ppy])
   }
   
   # Produce in- and out-of-sample forecasts
   out <- mapacalc(y=y, mapafit=mapafit, fh=fh, comb=comb, 
-                  outplot=outplot, hybrid=hybrid)
+                  outplot=outplot, hybrid=hybrid, xreg=xreg)
   
   return(out)
+  
+}
+
+#-------------------------------------------------
+mapaprcomp <- function(x,pr.comp){
+  # Function to preprocess xreg with principal component
+  #
+  # Inputs
+  #   x          = xreg
+  #   pr.comp    = list containing list("pr.comp", "mean", "sd")
+  
+  p <- dim(x)[2]
+  
+  # Get bits from list
+  comp <- pr.comp$pr.comp
+  x.mn <- pr.comp$mean
+  x.sd <- pr.comp$sd
+  
+  if (comp != 0){
+    # Reduction is perfomed
+    
+    # Normalise xreg
+    n <- dim(x)[1]
+    x <- (x - matrix(rep(x.mn,n),nrow=n,byrow=TRUE))/matrix(rep(x.sd,n),nrow=n,byrow=TRUE)
+    
+    # Check if requested number of components is possible
+    if (comp > p){
+      stop("The requested number of principal components exceeds the number of xreg variables.")
+    }
+    
+    # Calculate principal components
+    x.pr <- prcomp(x,center=FALSE,scale.=FALSE)
+    
+    # If a nmber of components is provided then simply choose that and proceed
+    if (comp < 0){
+      # Select number of components automatically
+      # For this I am using Jolliffe's rule 
+      # Cangelosi, Richard, and Alain Goriely. "Component retention in principal component analysis with application to cDNA microarray data." Biology direct 2.1 (2007): 1.
+      ev <- x.pr$sdev^2
+      ev <- (1-1/nrow(x))*ev
+      comp <- sum(ev >= 0.7*mean(ev))
+    }
+    x.out <- x.pr$x[,1:comp,drop=FALSE]
+    
+  } else {
+    # No pre-processing
+    x.out <- x
+  }
+  
+  return(list("x.out"=x.out,"pr.comp"=list("pr.comp"=comp,"mean"=x.mn,"sd"=x.sd)))
   
 }

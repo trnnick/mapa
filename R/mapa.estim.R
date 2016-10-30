@@ -2,7 +2,8 @@
 # Nikolaos Kourentzes 2016 
 
 mapaest <- function(y, ppy=NULL, minimumAL=1, maximumAL=ppy, paral=c(0,1,2), display=c(0,1), 
-                    outplot=c(0,1), model="ZZZ", type=c("ets","es"), ...) {
+                    outplot=c(0,1), model="ZZZ", type=c("ets","es"), xreg=NULL, 
+                    pr.comp=0,...) {
   # Estimate MAPA for a time series  
   #  
   # Inputs:
@@ -32,6 +33,14 @@ mapaest <- function(y, ppy=NULL, minimumAL=1, maximumAL=ppy, paral=c(0,1,2), dis
   #                 1 then a non-seasonal model is estimated.
   #   type        = What type of exponential smoothing implementation to use. "es" - use from 
   #                 the smooth package; "ets" use from the forecast package
+  #   xreg        = Vector or matrix of exogenous variables to be included in the MAPA. 
+  #                 If matrix then rows are observations and columns are variables. 
+  #                 Must be at least as long as in-sample. Additional observations are unused.
+  #                 Note that including xreg will force type="es". 
+  #   pr.comp     = MAPAx can use principal component analysis to preprocess xreg. When comp is -1 
+  #                 then the number of retained components is chosen automatically. When comp=0 
+  #                 then no pre-processing is performed and the original xreg is used. Any other 
+  #                 value represents the number of principal components retained. 
   #   ...         = Pass additional arguments to es and ets.
   #
   # Output:
@@ -54,6 +63,43 @@ mapaest <- function(y, ppy=NULL, minimumAL=1, maximumAL=ppy, paral=c(0,1,2), dis
                  "at the sampled frequency."))
     }
   }  
+  
+  # If xreg is used then force type="es" and give a warning
+  if (!is.null(xreg) & type=="ets"){
+    type <- "es"
+    warning('Only type="es" can accept xreg inputs. Forcing appropriate type.')
+  }
+  
+  # Convert xreg to array and check its size
+  if (!is.null(xreg)){
+    n <- length(y)
+    # Force xreg to be a matrix, each column a variable
+    if (!is.null(dim(xreg))){
+      p <- dim(xreg)[2]
+    } else {
+      p <- 1
+    }
+    xreg <- matrix(xreg,ncol=p)
+    # Check that it contains at least n observatoins and trim
+    xn <- dim(xreg)[1]
+    if (xn < n){
+      stop("Number of observations of xreg must be equal of exceed the length of y.")
+    } else {
+      xreg <- matrix(xreg[1:n,],ncol=p)
+    }
+    
+    # Perform preprocessing
+    x.m <- colMeans(xreg)
+    x.sd <- apply(xreg,2,sd)
+    pr.comp <- list("pr.comp"=pr.comp, "mean"=x.m, "sd"=x.sd)
+    pr.out <- mapaprcomp(xreg,pr.comp)
+    xreg <- pr.out$x.out
+    pr.comp <- pr.out$pr.comp
+    
+  } else {
+    # No xreg, so mark no pre-processing
+    pr.comp <- list("pr.comp"=0, "mean"=NULL, "sd"=NULL)
+  }
   
   # Suggest to use es instead of ets when ppy > 24
   if (ppy > 24 & type == "ets"){
@@ -94,12 +140,12 @@ mapaest <- function(y, ppy=NULL, minimumAL=1, maximumAL=ppy, paral=c(0,1,2), dis
   if (paral != 0){  # Parallel run
     mapafit <- clusterApplyLB(cl, 1:(maximumAL-minimumAL+1), mapaest.loop, 
                               y=y, minimumAL=minimumAL, maximumAL=maximumAL, observations=observations, ppy=ppy,
-                              display=display,model=model,type=type,...)  
+                              display=display,model=model,type=type,xreg=xreg,pr.comp=pr.comp,...)  
   } else {          # Serial run
     mapafit <- vector("list", (maximumAL-minimumAL+1))
     for (i in 1:(maximumAL-minimumAL+1)){
       mapafit[[i]] <- mapaest.loop(i, y, minimumAL, maximumAL, observations, 
-                                   ppy, display,model=model,type=type,...)
+                                   ppy, display,model=model,type=type,xreg=xreg,pr.comp=pr.comp,...)
     }
   }
   
@@ -125,7 +171,7 @@ mapaest <- function(y, ppy=NULL, minimumAL=1, maximumAL=ppy, paral=c(0,1,2), dis
 
 #-------------------------------------------------
 mapaest.loop <- function(ALi, y, minimumAL, maximumAL, observations, 
-                         ppy, display, model, type, ...){ 
+                         ppy, display, model, type, xreg=NULL, pr.comp, ...){ 
   # Internal function for running a single loop in mapaest
   
   # Create ETS model strings
@@ -183,7 +229,14 @@ mapaest.loop <- function(ALi, y, minimumAL, maximumAL, observations,
   if (q <= npars){
     q <- 1} # This will not estimate current AL
   
-  if (q >= 4){ # Fit only when there is enough sample
+  # Adjust for explanatory variables
+  if (!is.null(xreg)){
+    xreg.p <- dim(xreg)[2]
+  } else {
+    xreg.p <- 0
+  }
+  
+  if (q >= 4 + xreg.p){ # Fit only when there is enough sample
     
     # Aggregation
     yA <- colMeans(matrix(tail(y,q*AL),nrow=AL))
@@ -193,6 +246,17 @@ mapaest.loop <- function(ALi, y, minimumAL, maximumAL, observations,
     # for (j in 1:q){                 # calculate the aggregate values
     #   yA[j] <- mean(y[(r+1+(j-1)*AL):(r+j*AL)])
     # }
+    
+    # Aggregate xreg
+    if (!is.null(xreg)){
+      p <- dim(xreg)[2]
+      xregA <- array(NA, c(q,p))  
+      for (k in 1:p){
+        xregA[,k] <- colMeans(matrix(tail(xreg[,k],q*AL),nrow=AL))
+      }
+    } else {
+      xregA <- NULL
+    }
     
     # Check if seasonality exists and select appropriate model
     if ((tail(model.set,1) == "A" | tail(model.set,1) == "M") && ppyA == 1){
@@ -229,10 +293,15 @@ mapaest.loop <- function(ALi, y, minimumAL, maximumAL, observations,
       }
       
     } else if (type == "es"){
-      
+      # When xreg is a single column array es wants the input as a vector
+      if (!is.null(xreg)){
+        if (dim(xregA)[2] ==1){
+          xregA <- as.vector(xregA)
+        }
+      }
       # Turn off warnings for es - this is done when the model reduces pool 
       # due to sample size.
-      fit <- suppressWarnings(es(ats,model=mapa.model,silent="all", ...))
+      fit <- suppressWarnings(es(ats,model=mapa.model,silent="all",xreg=xregA, ...))
             
     }
     
@@ -271,6 +340,7 @@ mapaest.loop <- function(ALi, y, minimumAL, maximumAL, observations,
   } else if (type == "es"){
     fit$etstype <- "es"
   }
+  fit$pr.comp <- pr.comp
   
   # Update console display
   if (display==1){
@@ -288,7 +358,7 @@ mapaest.loop <- function(ALi, y, minimumAL, maximumAL, observations,
 #-------------------------------------------------
 plotmapa <- function(mapafit){
   
-  warning("This function is depreciated. Simply use plot().")
+  warning("'plotmapa' is deprecated.\n Use plot() instead.")
   plot.mapa.fit(mapafit)
   
 }
@@ -321,21 +391,33 @@ print.mapa.fit <- function(x,...){
   if (ets.type == "ets"){
     mdls <- x[unlist(x[,idx.use]),13]
     mdls <- lapply(mdls,function(x){gsub(',','',x)})
+    x.n <- rep(0,sum(unlist(x[,idx.use])))
   } else if (ets.type == "es"){
     mdls <- x[unlist(x[,idx.use]),1]
+    # Check for xreg
+    idx.x <- which(colnames(x)=="initialX")
+    x.n <- lapply(x[,idx.x],length)
+    x.n <- unlist(x.n[unlist(x[,idx.use])])
   }
   for (i in 1:(maximumAL-minimumAL+1)){
-    cat(paste0("Aggregation level: ",ALplot[i],"\t","Method: ",mdls[[i]],"\n"))
+    if (x.n[i] == 0){ # No xreg
+      cat(paste0("Aggregation level: ",ALplot[i],"\t","Method: ",mdls[[i]],"\n"))
+    }else {
+      cat(paste0("Aggregation level: ",ALplot[i],"\t","Method: ",mdls[[i]],"+X(",x.n[i],")","\n"))
+    }
   }
     
 }
 
 #-------------------------------------------------
-plot.mapa.fit <- function(x,...){
+plot.mapa.fit <- function(x,xreg.plot=c(TRUE,FALSE),...){
   # Produce estimated MAPA fit plot
   # 
   # Inputs:
   #   mapafit     = Fitted MAPA model (from mapaest)
+  #   xreg.plot   = Add infromation about xreg in the figure. 
+  
+  xreg.plot <- xreg.plot[1]
   
   # Find locations in mapafit
   idx.use <- which(colnames(x)=="use")
@@ -356,10 +438,13 @@ plot.mapa.fit <- function(x,...){
   layout(matrix(1, 1, 1, byrow = TRUE))
   comps <- array(0,c(max(ALplot),4))
   comps.char <- array(0,c(max(ALplot),3))
+  x.n <- vector("numeric",max(ALplot))
+  
   for (AL in 1:max(ALplot)){
     
     # Get fitted components at each AL
     if (ets.type == "ets"){
+      
       components <- x[[AL, 14]]
       if (components[[4]] == "TRUE"){
         components[[4]] <- "d"
@@ -369,7 +454,12 @@ plot.mapa.fit <- function(x,...){
       components <- components[c(1,2,4,3)]
       components <- c(components[1],paste0(components[2],components[3]),tail(components,1))
       ttl <- "ETS components"
+      
+      # Check for xreg
+      x.n[AL] <- 0
+
     } else if (ets.type == "es"){
+      
       # Get ES components
       components <- x[[AL, 1]]
       components <- substring(components,5,nchar(components))
@@ -380,6 +470,10 @@ plot.mapa.fit <- function(x,...){
         components <- c(components[1],paste0(components[2],components[3]),components[mn])
       }
       ttl <- "ES components"
+      
+      # Check for xreg
+      x.n[AL] <- length(x[[AL,which(colnames(x)=="initialX")]])
+      
     }
     
     # Error term
@@ -414,22 +508,33 @@ plot.mapa.fit <- function(x,...){
     comps[AL,4] <- x[[AL,idx.AL]]
   }
   
-  image(min(comps[,4]):max(comps[,4]), 1:3, matrix(comps[,1:3],ncol=3), axes=FALSE, col=brewer.pal(8,"PuBu")[2:6], #rev(heat.colors(5)),
+  # Add row for xreg if needed
+  if (sum(x.n)>0 & xreg.plot == TRUE){
+    x.add <- 1
+    comps <- cbind(comps[,1:3],x.n>0,comps[,4])
+  } else {
+    x.add <- 0
+  }
+
+  image(min(comps[,4+x.add]):max(comps[,4+x.add]), 1:(3+x.add), matrix(comps[,(3+x.add):1],ncol=(3+x.add)), axes=FALSE, col=brewer.pal(8,"PuBu")[2:6], #rev(heat.colors(5)),
         ylab="Components", xlab="Aggregation Level", main=ttl,breaks=c(-1,0,1,1.5,2,2.5))
-  axis(2, at=1:3, labels=list("Error","Trend","Season"))
-  axis(1, at=min(comps[,4]):max(comps[,4]))
+  axis(2, at=1:(3+x.add), labels=list("Error","Trend","Season","Xreg")[(3+x.add):1])
+  axis(1, at=min(comps[,4+x.add]):max(comps[,4+x.add]))
   box()
   
-  for (i in 1:4){
+  for (i in 1:(4+x.add)){
     for (AL in 1:max(ALplot)){
       if (i==1){
-        lines(c(AL-0.5+minimumAL-1,AL-0.5+minimumAL-1),c(0,4),col="black")
+        lines(c(AL-0.5+minimumAL-1,AL-0.5+minimumAL-1),c(0,4+x.add),col="black")
       }
-      if (i<4 & AL<=max(comps[,4])){
-        text(AL+minimumAL-1,i,comps.char[AL,i])
+      if (i<4 & AL<=max(comps[,4+x.add])){
+        text(AL+minimumAL-1,i+x.add,comps.char[AL,4-i])
+      }
+      if (x.add==1){
+        text(AL+minimumAL-1,1,x.n[AL])
       }
     }
-    lines(c(min(comps[,4])-0.5,max(comps[,4])+0.5),c(i-0.5,i-0.5),col="black")
+    lines(c(min(comps[,4+x.add])-0.5,max(comps[,4+x.add])+0.5),c(i-0.5,i-0.5),col="black")
   }
 
 }

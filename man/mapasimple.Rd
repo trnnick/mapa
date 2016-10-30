@@ -9,7 +9,7 @@ It is not suggested, unless only simple single origin forecasts are required.
 mapasimple(y, ppy=NULL, fh=ppy, minimumAL=1, maximumAL=ppy, 
            comb=c("mean","median","wght"), paral=c(0,1,2), display=c(0,1), 
            outplot=c(1,0), hybrid=c(TRUE,FALSE), model="ZZZ", 
-           type=c("ets","es"),...)
+           type=c("ets","es"), xreg=NULL, pr.comp=0, ...)
 }
 \arguments{
   \item{y}{
@@ -50,6 +50,12 @@ mapasimple(y, ppy=NULL, fh=ppy, minimumAL=1, maximumAL=ppy,
 }
   \item{type}{
     What type of exponential smoothing implementation to use. "es" = use from the smooth package; "ets" = use from the forecast package. Default is "es"
+  }
+  \item{xreg}{
+    Vector or matrix of exogenous variables to be included in the MAPA. If matrix then rows are observations and columns are variables. Must be at least as long as in-sample. Additional observations are unused. Note that including xreg will force type="es". 
+  }  
+  \item{pr.comp}{
+    MAPAx can use principal component analysis to preprocess xreg. When comp is -1 then the number of retained components is chosen automatically. When comp=0 then no pre-processing is performed and the original xreg is used. Any other value represents the number of principal components retained. 
   }
   \item{...}{
     Pass additional arguments to es or ets.

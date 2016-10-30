@@ -1,10 +1,10 @@
 Package: MAPA
 Type: Package
 Title: Multiple Aggregation Prediction Algorithm
-Version: 2.0.0
-Date: 2016-10-24
+Version: 2.0.1
+Date: 2016-11-01
 Author: Nikolaos Kourentzes and Fotios Petropoulos
-Maintainer: Nikolaos Kourentzes <n.kourentzes@lancaster.ac.uk> 
+Maintainer: Nikolaos Kourentzes <nikolaos@kourentzes.com> 
 Description: Functions and wrappers for using the Multiple Aggregation Prediction Algorithm (MAPA) for time series forecasting. MAPA models and forecasts time series at multiple temporal aggregation levels, thus strengthening and attenuating the various time series components for better holistic estimation of its structure.
 LazyData: yes
 License: GPL (>= 2)

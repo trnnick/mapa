@@ -5,8 +5,8 @@ statetranslate <- function(fit,AL,fh,q,ppyA,fittype,ets.type){
   # This function prepares ets states for MAPA combination
   # It extrapolates from last states the forecasts and translates to additive
   
-  FCs_temp <- array(0, c(4, fh))
-  fhA <- (fh %/% AL) + 1   # forecast horizon for the aggregated level
+  FCs_temp <- array(0, c(5, fh))
+  fhA <- ceiling(fh/AL)   # forecast horizon for the aggregated level
   
   if (ets.type == "ets"){
     # Handle ets from forecast package
@@ -91,7 +91,8 @@ statetranslate <- function(fit,AL,fh,q,ppyA,fittype,ets.type){
     }
     
     # Estimates for the Seasonal Component 
-    sc <- dim(fit$states)[2]
+    # sc <- dim(fit$states)[2]
+    sc <- which(colnames(fit$states) == "seasonality")
     if (components[3]=="N"){ # no seasonality
       FCs_temp[4, ] <- 0
     } else if (components[3]=="A"){ # additive seasonality
@@ -101,15 +102,25 @@ statetranslate <- function(fit,AL,fh,q,ppyA,fittype,ets.type){
                                        each=AL)[1:fh] - 1)) * (FCs_temp[2, ] + FCs_temp[3, ])
     }
     
+    # Estimate for the xreg 
+    xreg <- fit$xreg
+    if (!is.null(xreg)){
+      if (!is.null(dim(xreg))){
+        FCs_temp[5, ] <- as.numeric(rep( colSums(t(xreg[(q+1):(q+fhA),] * matrix(rep(fit$initialX,fhA),nrow=fhA,byrow=TRUE))) , each=AL))[1:fh]
+      } else {
+        FCs_temp[5, ] <- as.numeric(rep(xreg[(q+1):(q+fhA)] * fit$initialX, each=AL))[1:fh]
+      }
+    }
+    
   }
   
   # fittype identifies if information is comming from ets or mapafit
   if (fittype==1){
     # Recreate ETS forecasts
     if (fh != 1) {
-      FCs_temp[1, ] <- colSums(FCs_temp[2:4,])     
+      FCs_temp[1, ] <- colSums(FCs_temp[2:5,])     
     } else {
-      FCs_temp[1, ] <- sum(FCs_temp[2:4,])   
+      FCs_temp[1, ] <- sum(FCs_temp[2:5,])   
     }
   }
   
@@ -120,7 +131,7 @@ statetranslate <- function(fit,AL,fh,q,ppyA,fittype,ets.type){
 
 #-------------------------------------------------
 mapacalc <- function(y, mapafit, fh=0, comb=c("mean", "median", "wght"),
-                     outplot=c(0,1,2), hybrid=c(TRUE,FALSE)){
+                     outplot=c(0,1,2), hybrid=c(TRUE,FALSE), xreg=NULL){
   # Calculation of MAPA forecasts
   # 
   # Inputs:
@@ -133,6 +144,9 @@ mapacalc <- function(y, mapafit, fh=0, comb=c("mean", "median", "wght"),
   #                 2 = time series, forecasts and components. Default is 1. 
   #   hybrid      = Provide hybrid forecasts, as in Kourentzes et al. paper. Default is TRUE
   #                 If minimumAL > 1 then the minimumAL ETS forecasts are used.
+  #   xreg        = Vector or matrix of exogenous variables to be included in the MAPA. 
+  #                 If matrix then rows are observations and columns are variables. 
+  #                 Must be at least as long as in-sample plus fh. Additional observations are unused.
   #
   # Output:
   #   forecasts   = Vector with forecasts
@@ -146,6 +160,7 @@ mapacalc <- function(y, mapafit, fh=0, comb=c("mean", "median", "wght"),
   idx.use <- which(colnames(mapafit)=="use")
   idx.AL <- which(colnames(mapafit)=="AL")
   idx.ppy <- which(colnames(mapafit)=="original.ppy")
+  idx.comp <- which(colnames(mapafit)=="pr.comp")
   ets.type <- mapafit[1,which(colnames(mapafit)=="etstype")]
   
   # Get settings from mapafit
@@ -161,9 +176,29 @@ mapacalc <- function(y, mapafit, fh=0, comb=c("mean", "median", "wght"),
   
   observations <- length(y) # number of observations for the in-sample data
   
+  # Convert xreg to array, check its size and mapafit compatibility
+  if (!is.null(xreg)){
+    # Check if model is es
+    if (ets.type != "es"){
+      stop('Only mapafit estimated with type=="es" accepts xreg inputs.')
+    }
+    # Force xreg to be a matrix, each column a variable
+    if (!is.null(dim(xreg))){
+      p <- dim(xreg)[2]
+    } else {
+      p <- 1
+    }
+    xreg <- matrix(xreg,ncol=p)
+    # Check that it contains at least n observatoins and trim
+    xn <- dim(xreg)[1]
+    if (xn < (fh + observations)){
+      stop("Number of observations of xreg must be equal of exceed the length of y + fh.")
+    } 
+  }
+  
   # The forecasted components are saved here
-  FCs <- array(0, c(maximumAL-minimumAL+1, 4, fh),dimnames=list(paste("AL",minimumAL:maximumAL,sep=""),
-                                                                c("ETS","Level","Trend","Season"),paste("t+",1:fh,sep=""))) 
+  FCs <- array(0, c(maximumAL-minimumAL+1, 5, fh),dimnames=list(paste("AL",minimumAL:maximumAL,sep=""),
+                                                                c("ETS","Level","Trend","Season","Xreg"),paste("t+",1:fh,sep=""))) 
   
   # MAPA forecast
   ALvec <- minimumAL:maximumAL
@@ -171,6 +206,7 @@ mapacalc <- function(y, mapafit, fh=0, comb=c("mean", "median", "wght"),
   for (ALi in 1:(maximumAL-minimumAL+1)){
     
     AL <- ALvec[ALi]
+    fhA <- ceiling(fh/AL)   # This is used for es and xreg preprocessing
     
     q <- observations %/% AL # observation in the aggregated level
     ppyA <- ppy %/% AL       # periods per year for the aggregated level
@@ -182,6 +218,32 @@ mapacalc <- function(y, mapafit, fh=0, comb=c("mean", "median", "wght"),
     yA <- colMeans(matrix(tail(y,q*AL),nrow=AL))
     ats <- ts(yA, frequency = ppyA) 
     
+    # Aggregate xreg 
+    # This is aligned with the end point of the aggregation of y
+    if (!is.null(xreg)){
+      r <- observations - q*AL
+      p <- dim(xreg)[2]
+      xn <- dim(xreg)[1]
+      xregA <- array(NA, c(q+fhA,p))
+      for (k in 1:p){
+        temp <- xreg[(r+1):min(c((q+fhA)*AL,xn)),k]
+        m <- ceiling(length(temp)/AL)*AL - length(temp)
+        temp <- c(temp,rep(NA,m))
+        xregA[,k] <- colMeans(matrix(temp,nrow=AL),na.rm=TRUE)
+      }
+      # Check that mapafit expected xreg matches xreg input
+      idx.x <- which(colnames(mapafit)=="initialX")
+      if (length(mapafit[[ALi,idx.x]]) != p){
+        stop("Number of xreg input variables does not match mapafit specification.")
+      }
+      # Preprocess if needed
+      pr.out <- mapaprcomp(xregA,mapafit[[ALi,idx.comp]])
+      xregA <- pr.out$x.out
+      
+    } else {
+      xregA <- NULL
+    }
+    
     # Predict
     if (ets.type == "ets"){
       
@@ -190,9 +252,8 @@ mapacalc <- function(y, mapafit, fh=0, comb=c("mean", "median", "wght"),
 
     } else if (ets.type=="es"){
       
-      fhA <- (fh %/% AL) + 1
       AL.fit <- structure(mapafit[ALi,1:32], class = "smooth")
-      ats.fit <- es(ats, model=AL.fit, h=fhA, silent="all")
+      ats.fit <- suppressWarnings(es(ats, model=AL.fit, h=fhA, silent="all",xreg=xregA))
       
     }
     
@@ -221,7 +282,7 @@ mapacalc <- function(y, mapafit, fh=0, comb=c("mean", "median", "wght"),
   if (hybrid==TRUE){
     forecasts <- (FCs[1,1,] + forecasts)/2
   }  
-  
+
   # Plot output
   mapaplot(outplot,FCs,minimumAL,maximumAL,perm_levels,perm_seas,observations,y,forecasts,fh,comb)
   
@@ -242,7 +303,7 @@ print.mapa.calc <- function(x,...){
 
 #-------------------------------------------------
 mapafor <- function(y, mapafit, fh=-1, ifh=1, comb=c("mean","median","wght"), 
-                    outplot=c(1,0), hybrid=c(TRUE,FALSE), conf.lvl=NULL) {
+                    outplot=c(1,0), hybrid=c(TRUE,FALSE), conf.lvl=NULL, xreg=NULL) {
   # MAPA in- and out-of-sample forecast
   # 
   # Inputs:
@@ -258,6 +319,9 @@ mapafor <- function(y, mapafit, fh=-1, ifh=1, comb=c("mean","median","wght"),
   #   conf.lvl    = Vector of confidence level for prediction intervals. Values must be (0,1). 
   #                 If conf.lvl == NULL then no intervals are calculated. For example to get 
   #                 the intervals for 80% and 95% use conf.lvl=c(0.8,0.95). 
+  #   xreg        = Vector or matrix of exogenous variables to be included in the MAPA. 
+  #                 If matrix then rows are observations and columns are variables. 
+  #                 Must be at least as long as in-sample plus fh. Additional observations are unused.
   #
   # Output:
   #   out$infor   = In-sample forecasts.
@@ -283,7 +347,7 @@ mapafor <- function(y, mapafit, fh=-1, ifh=1, comb=c("mean","median","wght"),
   minimumAL <- min(ALs)
   maximumAL <- max(ALs)
   
-  ppy <- as.numeric(mapafit[1,idx.ppy])
+  ppy <- as.numeric(mapafit[[1,idx.ppy]])
   
   if (fh == -1){
     fh <- ppy
@@ -311,7 +375,7 @@ mapafor <- function(y, mapafit, fh=-1, ifh=1, comb=c("mean","median","wght"),
     infor <- array(NA,c(ifh.c,observations),dimnames=list(paste("t+",1:ifh.c,sep="")))
     for (i in i.start:(observations-1)){
       inobs <- as.matrix(y[1:i])
-      infor[, i+1] <- mapacalc(inobs, mapafit, fh=ifh.c, comb, outplot=0, hybrid)$forecast
+      infor[, i+1] <- mapacalc(inobs, mapafit, fh=ifh.c, comb, outplot=0, hybrid, xreg=xreg)$forecast
       # Crop out-of-sample predictions
       if ((i+ifh.c)>observations){
         k <- (i+ifh.c) - observations
@@ -327,7 +391,7 @@ mapafor <- function(y, mapafit, fh=-1, ifh=1, comb=c("mean","median","wght"),
   
   # Out-of-sample MAPA
   if (fh>0){
-    outfor <- mapacalc(y, mapafit, fh, comb, outplot=0, hybrid)$forecast
+    outfor <- mapacalc(y, mapafit, fh, comb, outplot=0, hybrid,xreg=xreg)$forecast
   } else {
     outfor <- NULL
   }

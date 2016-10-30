@@ -9,7 +9,8 @@ Uses mapaest and mapafor.}
 \usage{
 mapa(y, ppy, fh=ppy, ifh=1, minimumAL=1, maximumAL=ppy, 
      comb=c("mean","median","wght"), paral=c(0,1,2), display=c(0,1), outplot=c(1,0),
-     hybrid=c(TRUE,FALSE), model="ZZZ", type=c("ets","es"), conf.lvl=NULL, ...)
+     hybrid=c(TRUE,FALSE), model="ZZZ", type=c("ets","es"), conf.lvl=NULL, 
+     xreg=NULL, pr.comp=0, ...)
 }
 
 \arguments{
@@ -56,6 +57,12 @@ mapa(y, ppy, fh=ppy, ifh=1, minimumAL=1, maximumAL=ppy,
   \item{conf.lvl}{
     Vector of confidence level for prediction intervals. Values must be (0,1). If conf.lvl == NULL then no intervals are calculated. For example to get the intervals for 80\% and 95\% use conf.lvl=c(0.8,0.95).
 }
+  \item{xreg}{
+    Vector or matrix of exogenous variables to be included in the MAPA. If matrix then rows are observations and columns are variables. Must be at least as long as in-sample. Additional observations are unused. Note that including xreg will force type="es". 
+}
+  \item{pr.comp}{
+    MAPAx can use principal component analysis to preprocess xreg. When comp is -1 then the number of retained components is chosen automatically. When comp=0 then no pre-processing is performed and the original xreg is used. Any other value represents the number of principal components retained. 
+  }
 \item{...}{
     Pass additional arguments to es or ets.
   }

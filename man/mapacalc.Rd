@@ -7,7 +7,7 @@ This is meant to be an internal function. Use mapafor instead.
 }
 \usage{
 mapacalc(y, mapafit, fh = 0, comb = c("mean","median","wght"), 
-         outplot = c(0,1,2), hybrid = c(TRUE,FALSE))
+         outplot = c(0,1,2), hybrid = c(TRUE,FALSE), xreg=NULL)
 }
 \arguments{
   \item{y}{
@@ -27,6 +27,9 @@ mapacalc(y, mapafit, fh = 0, comb = c("mean","median","wght"),
 }
 \item{hybrid}{
     Provide hybrid forecasts, as in Kourentzes et al. paper. If minimumAL > 1 then the minimumAL ETS forecasts are used. Default is TRUE.
+}
+  \item{xreg}{
+    Vector or matrix of exogenous variables to be included in the MAPA. If matrix then rows are observations and columns are variables. Must be at least as long as in-sample plus fh. Additional observations are unused. 
 }
 }
 \value{

@@ -8,7 +8,7 @@ The following function produces in- and out-of-sample MAPA forecasts, for multip
 \usage{
 mapafor(y, mapafit, fh = -1, ifh = 1, comb = c("mean","median","wght"), 
         outplot = c(1,0), hybrid = c(TRUE, FALSE), 
-        conf.lvl = NULL)
+        conf.lvl = NULL, xreg=NULL)
 }
 \arguments{
   \item{y}{
@@ -34,6 +34,9 @@ mapafor(y, mapafit, fh = -1, ifh = 1, comb = c("mean","median","wght"),
 }
   \item{conf.lvl}{
     Vector of confidence level for prediction intervals. Values must be (0,1). If conf.lvl == NULL then no intervals are calculated. For example to get the intervals for 80\% and 95\% use conf.lvl=c(0.8,0.95).
+}
+  \item{xreg}{
+    Vector or matrix of exogenous variables to be included in the MAPA. If matrix then rows are observations and columns are variables. Must be at least as long as in-sample plus fh. Additional observations are unused. 
 }
 }
 \value{
