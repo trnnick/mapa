@@ -53,12 +53,15 @@ mapaest(y, ppy, minimumAL = 1, maximumAL = ppy, paral = c(0,1,2),
 \item{mapafit}{Estimated MAPA model structure.}
 }
 \references{
-Kourentzes N., Petropoulos F., Trapero J.R., 2014. Improving forecasting by estimating time 
-series structural components across multiple frequencies, International Journal of Forecasting,
- 30(2), 291-302.
+    \itemize{
+        \item{Kourentzes N., Petropoulos F., Trapero J.R. (2014) Improving forecasting by estimating time 
+series structural components across multiple frequencies. \emph{International Journal of Forecasting}, \bold{30}(\bold{2}), 291--302.}
+        \item{Kourentzes N., Petropoulos F. (2015) Forecasting with multivariate temporal aggregation: The case of promotional modelling. \emph{International Journal of Production Economics}.}
+        \item{You can find more information about MAPA at Nikos' \href{http://kourentzes.com/forecasting/tag/mapa/}{blog}.}
+  }
 }
 \author{
-Nikolaos Kourentzes and Fotios Petropoulos
+Nikolaos Kourentzes, \email{nikolaos@kourentzes.com}; Fotios Petropoulos.
 }
 \seealso{
 \code{\link{mapa}}, \code{\link{mapafor}}.

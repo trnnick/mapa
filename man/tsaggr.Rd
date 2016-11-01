@@ -35,7 +35,7 @@ tsaggr(y,fout,fmean=c(FALSE,TRUE),outplot=c(FALSE,TRUE))
 }
 }
 \author{
-Nikolaos Kourentzes
+Nikolaos Kourentzes, \email{nikolaos@kourentzes.com}.
 }
 \examples{
 out <- tsaggr(admissions,fout=2:12,fmean=TRUE,outplot=TRUE)
