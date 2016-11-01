@@ -8,6 +8,6 @@ Maintainer: Nikolaos Kourentzes <nikolaos@kourentzes.com>
 Description: Functions and wrappers for using the Multiple Aggregation Prediction Algorithm (MAPA) for time series forecasting. MAPA models and forecasts time series at multiple temporal aggregation levels, thus strengthening and attenuating the various time series components for better holistic estimation of its structure.
 LazyData: yes
 License: GPL (>= 2)
-Depends: forecast (>= 5.3), parallel, RColorBrewer, smooth (>= 1.4.6)
+Depends: forecast (>= 5.3), parallel, RColorBrewer, smooth (>= 1.4.7)
 URL: http://kourentzes.com/forecasting/2014/04/19/multiple-aggregation-prediction-algorithm-mapa/
 BugReports: https://github.com/trnnick/mapa/issues

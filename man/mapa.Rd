@@ -8,9 +8,9 @@ Uses mapaest and mapafor.}
 
 \usage{
 mapa(y, ppy, fh=ppy, ifh=1, minimumAL=1, maximumAL=ppy, 
-     comb=c("mean","median","wght"), paral=c(0,1,2), display=c(0,1), outplot=c(1,0),
-     hybrid=c(TRUE,FALSE), model="ZZZ", type=c("ets","es"), conf.lvl=NULL, 
-     xreg=NULL, pr.comp=0, ...)
+     comb=c("mean","median","w.mean","w.median","wght"), paral=c(0,1,2), 
+     display=c(0,1), outplot=c(1,0), hybrid=c(TRUE,FALSE), model="ZZZ", 
+     type=c("ets","es"), conf.lvl=NULL, xreg=NULL, pr.comp=0, ...)
 }
 
 \arguments{
@@ -34,7 +34,7 @@ mapa(y, ppy, fh=ppy, ifh=1, minimumAL=1, maximumAL=ppy,
     Highest aggregation level to use. Default = ppy, maximumAL>1.
 }
   \item{comb}{
-    Combination operator. One of "mean" or "median". Default is "mean". "wght" is experimental, use at your own risk!
+    Combination operator. This can be: "mean"; "median"; "wght" - where each aggregation level is weighted inversly to aggregation; "w.mean" - level and trend components are averaged, but seasonal and xreg follow the wght combination; "w.median" - as w.mean, but with median. It is suggested that for data with high sampling frequency to use one of the "w.mean" and "w.median".
 }
   \item{paral}{
     Use parallel processing. 0 = no; 1 = yes (requires initialised cluster); 2 = yes and initialise cluster. Default is 0.

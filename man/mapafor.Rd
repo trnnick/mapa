@@ -6,7 +6,8 @@ The following function produces in- and out-of-sample MAPA forecasts, for multip
  This is the recommended function to use in forecasting with MAPA.
 }
 \usage{
-mapafor(y, mapafit, fh = -1, ifh = 1, comb = c("mean","median","wght"), 
+mapafor(y, mapafit, fh = -1, ifh = 1, 
+        comb = c("mean","median","w.mean","w.median","wght"), 
         outplot = c(1,0), hybrid = c(TRUE, FALSE), 
         conf.lvl = NULL, xreg=NULL)
 }
@@ -24,7 +25,7 @@ mapafor(y, mapafit, fh = -1, ifh = 1, comb = c("mean","median","wght"),
     In-sample forecast horizon. Default = 0.
 }
   \item{comb}{
-    Combination operator. One of "mean" or "median". Default is "mean". "wght" is experimental, use at your own risk!
+    Combination operator. This can be: "mean"; "median"; "wght" - where each aggregation level is weighted inversly to aggregation; "w.mean" - level and trend components are averaged, but seasonal and xreg follow the wght combination; "w.median" - as w.mean, but with median. It is suggested that for data with high sampling frequency to use one of the "w.mean" and "w.median".
 }
   \item{outplot}{
     Provide output plot. 0 = no; 1 = yes. Default is 1. 

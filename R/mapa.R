@@ -3,7 +3,7 @@
 
 #-------------------------------------------------
 mapa <- function(y, ppy=NULL, fh=ppy, ifh=1, minimumAL=1, maximumAL=ppy, 
-	comb=c("mean","median","wght"), paral=c(0,1,2), display=c(0,1), outplot=c(1,0), 
+	comb=c("mean","median","w.mean","w.median","wght"), paral=c(0,1,2), display=c(0,1), outplot=c(1,0), 
 	hybrid=c(TRUE,FALSE), model="ZZZ", type=c("ets","es"), conf.lvl=NULL, 
 	xreg=NULL, pr.comp=0, ...){
 # Wrapper to estimate and produce MAPA in- and out-of-sample forecasts
@@ -19,8 +19,11 @@ mapa <- function(y, ppy=NULL, fh=ppy, ifh=1, minimumAL=1, maximumAL=ppy,
 #   ifh         = In-sample forecast horizon. Default = 1
 #   minimumAL   = Lowest aggregation level to use. Default = 1
 #   maximumAL   = Highest aggregation level to use. Default = ppy, maximumAL>1
-#   comb        = Combination operator. One of "mean" or "median". Default is "mean".
-#                 "wght" is experimental, use at your own risk!  
+#   comb        = Combination operator. This can be: "mean"; "median"; "wght" - where each 
+#                 aggregation level is weighted inversly to aggregation; "w.mean" - level 
+#                 and trend components are averaged, but seasonal and xreg follow the wght 
+#                 combination; "w.median" - as w.mean, but with median. It is suggested that 
+#                 for data with high sampling frequency to use one of the "w.mean" and "w.median".
 #   paral       = Use parallel processing. 0 = no; 1 = yes (requires initialised cluster); 
 #                 2 = yes and initialise cluster. Default is 0.
 #   display     = Display calculation progress in console. 0 = no; 1 = yes. Default is 0.
@@ -155,14 +158,21 @@ mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb){
       wghts.season <- matrix(rep(wghts.season,fh),ncol=fh)
       forecasts <- colSums(rbind(colSums(level * wghts.level),colSums(trend * wghts.level),
                                  colSums(season * wghts.season),colSums(xreg * wghts.level)),na.rm=TRUE)
-    } else {
+    } else if (comb=="w.mean"){
       wghts <- 1/(minimumAL:maximumAL)
-      wghts.level <- rep(1,sum(perm_levels==1))/sum(perm_levels==1)
+      wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
       wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
       fh <- dim(level)[2]
-      wghts.level <- matrix(rep(wghts.level,fh),ncol=fh)
       wghts.season <- matrix(rep(wghts.season,fh),ncol=fh)
-      forecasts <- colSums(rbind(colSums(level * wghts.level),colSums(trend * wghts.level),
+      forecasts <- colSums(rbind(colMeans(level),colMeans(trend),
+                                 colSums(season * wghts.season),colSums(xreg * wghts.level)),na.rm=TRUE)
+    } else if (comb=="w.median"){
+      wghts <- 1/(minimumAL:maximumAL)
+      wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
+      wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
+      fh <- dim(level)[2]
+      wghts.season <- matrix(rep(wghts.season,fh),ncol=fh)
+      forecasts <- colSums(rbind(apply(level,2,"median"),apply(trend,2,"median"),
                                  colSums(season * wghts.season),colSums(xreg * wghts.level)),na.rm=TRUE)
     }
   } else {
@@ -180,11 +190,18 @@ mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb){
       forecasts <- sum(c(sum(FCs[perm_levels==1, 2, ]*wghts.level), sum(FCs[perm_levels==1, 3, ]*wghts.level),
                          sum(FCs[(perm_levels==1 & perm_seas==1), 4, ]*wghts.season),
                          sum(FCs[perm_levels==1, 5, ]*wghts.level)),na.rm=TRUE)
-    } else {
+    } else if (comb=="w.mean"){
       wghts <- 1/(minimumAL:maximumAL)
-      wghts.level <- rep(1,sum(perm_levels==1))/sum(perm_levels==1)
+      wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
       wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
-      forecasts <- sum(c(sum(FCs[perm_levels==1, 2, ]*wghts.level), sum(FCs[perm_levels==1, 3, ]*wghts.level),
+      forecasts <- sum(c(mean(FCs[perm_levels==1, 2, ]),mean(FCs[perm_levels==1, 3, ]),
+                         sum(FCs[(perm_levels==1 & perm_seas==1), 4, ]*wghts.season),
+                         sum(FCs[perm_levels==1, 5, ]*wghts.level)),na.rm=TRUE)
+    } else if (comb=="w.median"){
+      wghts <- 1/(minimumAL:maximumAL)
+      wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
+      wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
+      forecasts <- sum(c(median(FCs[perm_levels==1, 2, ]),median(FCs[perm_levels==1, 3, ]),
                          sum(FCs[(perm_levels==1 & perm_seas==1), 4, ]*wghts.season),
                          sum(FCs[perm_levels==1, 5, ]*wghts.level)),na.rm=TRUE)
     }
@@ -336,7 +353,7 @@ mapaplot <- function(outplot,FCs,minimumAL,maximumAL,perm_levels,perm_seas,
 }
 
 #-------------------------------------------------
-mapasimple <- function(y, ppy=NULL, fh=ppy, minimumAL=1, maximumAL=ppy, comb=c("mean","median","wght"), 
+mapasimple <- function(y, ppy=NULL, fh=ppy, minimumAL=1, maximumAL=ppy, comb=c("mean","median","w.mean","w.median","wght"), 
                        paral=c(0,1,2), display=c(0,1), outplot=c(1,0), hybrid=c(TRUE,FALSE), 
                        model="ZZZ", type=c("ets","es"), xreg=NULL, pr.comp=0, ...){
   # MAPA estimation and forecast
@@ -350,8 +367,11 @@ mapasimple <- function(y, ppy=NULL, fh=ppy, minimumAL=1, maximumAL=ppy, comb=c("
   #   fh          = Forecast horizon. Default = ppy
   #   minimumAL   = Lowest aggregation level to use. Default = 1, maximumAL>1
   #   maximumAL   = Highest aggregation level to use. Default = ppy
-  #   comb        = Combination operator. One of "mean" or "median". Default is "mean".
-  #                 "wght" is experimental, use at your own risk!
+  #   comb        = Combination operator. This can be: "mean"; "median"; "wght" - where each 
+  #                 aggregation level is weighted inversly to aggregation; "w.mean" - level 
+  #                 and trend components are averaged, but seasonal and xreg follow the wght 
+  #                 combination; "w.median" - as w.mean, but with median. It is suggested that 
+  #                 for data with high sampling frequency to use one of the "w.mean" and "w.median".
   #   paral       = Use parallel processing. 0 = no; 1 = yes (requires initialised cluster); 
   #                 2 = yes and initialise cluster. Default is 0.
   #   display     = Display calculation progress in console. 0 = no; 1 = yes. Default is 0.

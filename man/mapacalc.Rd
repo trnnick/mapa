@@ -6,7 +6,7 @@ The following function produces a simple MAPA forecast from a given origin.
 This is meant to be an internal function. Use mapafor instead.
 }
 \usage{
-mapacalc(y, mapafit, fh = 0, comb = c("mean","median","wght"), 
+mapacalc(y, mapafit, fh = 0, comb = c("mean","median","w.mean","w.median","wght"), 
          outplot = c(0,1,2), hybrid = c(TRUE,FALSE), xreg=NULL)
 }
 \arguments{
@@ -20,7 +20,7 @@ mapacalc(y, mapafit, fh = 0, comb = c("mean","median","wght"),
     Forecast horizon. Default = ppy.
 }
   \item{comb}{
-    Combination operator. One of "mean" or "median". Default is "mean". "wght" is experimental, use at your own risk!
+    Combination operator. This can be: "mean"; "median"; "wght" - where each aggregation level is weighted inversly to aggregation; "w.mean" - level and trend components are averaged, but seasonal and xreg follow the wght combination; "w.median" - as w.mean, but with median. It is suggested that for data with high sampling frequency to use one of the "w.mean" and "w.median".
 }
   \item{outplot}{
     Provide output plot. 0 = no; 1 = time series and forecast only; 2 = time series, forecasts and components. For the components the spectral colouring scheme is used. Dark red is aggregation level 1. Default is 1. 

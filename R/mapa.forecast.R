@@ -130,7 +130,7 @@ statetranslate <- function(fit,AL,fh,q,ppyA,fittype,ets.type){
 }
 
 #-------------------------------------------------
-mapacalc <- function(y, mapafit, fh=0, comb=c("mean", "median", "wght"),
+mapacalc <- function(y, mapafit, fh=0, comb=c("mean", "median", "w.mean", "w.median", "wght"),
                      outplot=c(0,1,2), hybrid=c(TRUE,FALSE), xreg=NULL){
   # Calculation of MAPA forecasts
   # 
@@ -138,8 +138,11 @@ mapacalc <- function(y, mapafit, fh=0, comb=c("mean", "median", "wght"),
   #   y           = In sample observations of a time series (vector)
   #   mapafit     = Fitted MAPA model (from mapaest)
   #   fh          = Forecast horizon. Default = ppy
-  #   comb        = Combination operator. One of "mean" or "median". Default is "mean".
-  #                 "wght" is experimental, use at your own risk!
+  #   comb        = Combination operator. This can be: "mean"; "median"; "wght" - where each 
+  #                 aggregation level is weighted inversly to aggregation; "w.mean" - level 
+  #                 and trend components are averaged, but seasonal and xreg follow the wght 
+  #                 combination; "w.median" - as w.mean, but with median. It is suggested that 
+  #                 for data with high sampling frequency to use one of the "w.mean" and "w.median".
   #   outplot     = Provide output plot. 0 = no; 1 = time series and forecast only;
   #                 2 = time series, forecasts and components. Default is 1. 
   #   hybrid      = Provide hybrid forecasts, as in Kourentzes et al. paper. Default is TRUE
@@ -302,7 +305,7 @@ print.mapa.calc <- function(x,...){
 }
 
 #-------------------------------------------------
-mapafor <- function(y, mapafit, fh=-1, ifh=1, comb=c("mean","median","wght"), 
+mapafor <- function(y, mapafit, fh=-1, ifh=1, comb=c("mean","median","w.mean","w.median","wght"), 
                     outplot=c(1,0), hybrid=c(TRUE,FALSE), conf.lvl=NULL, xreg=NULL) {
   # MAPA in- and out-of-sample forecast
   # 
@@ -311,8 +314,11 @@ mapafor <- function(y, mapafit, fh=-1, ifh=1, comb=c("mean","median","wght"),
   #   mapafit     = Fitted MAPA model (from mapaest)
   #   fh          = Forecast horizon. Default = ppy
   #   ifh         = In-sample forecast horizon. Default = 1
-  #   comb        = Combination operator. One of "mean" or "median". Default is "mean".
-  #                 "wght" is experimental, use at your own risk!
+  #   comb        = Combination operator. This can be: "mean"; "median"; "wght" - where each 
+  #                 aggregation level is weighted inversly to aggregation; "w.mean" - level 
+  #                 and trend components are averaged, but seasonal and xreg follow the wght 
+  #                 combination; "w.median" - as w.mean, but with median. It is suggested that 
+  #                 for data with high sampling frequency to use one of the "w.mean" and "w.median".
   #   outplot     = Provide output plot. 0 = no; 1 = yes. Default is 1. 
   #   hybrid      = Provide hybrid forecasts, as in Kourentzes et al. paper. Default is TRUE
   #                 If minimumAL > 1 then the minimumAL ETS forecasts are used.  

@@ -4,6 +4,7 @@
 
 - Introduced es from smooth package as core for MAPA. This can handle any seasonal length and allows some additional flexibility in model search.
 - MAPAx implemented. Now you introduce exogenous variables using xreg input argument, which the user can pre-process using PCA.
+- Introduced new combinations: "w.mean" and "w.median". These use mean or median for the combination of level and trend, but weight seasonality and xreg inversly proportional to the aggregation level. It is recommended to use these with high frequency time seres. 
 
 ## CHANGES
 
