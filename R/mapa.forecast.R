@@ -234,9 +234,12 @@ mapacalc <- function(y, mapafit, fh=0, comb=c("mean", "median", "w.mean", "w.med
         temp <- c(temp,rep(NA,m))
         xregA[,k] <- colMeans(matrix(temp,nrow=AL),na.rm=TRUE)
       }
+
       # Check that mapafit expected xreg matches xreg input
+      # Either pr.comp = 0 and check number of x's or pr.comp > 0 and x's should be >= pr.comp
       idx.x <- which(colnames(mapafit)=="initialX")
-      if (length(mapafit[[ALi,idx.x]]) != p){
+      if (((mapafit[[ALi,idx.comp]]$pr.comp > 0) & (length(mapafit[[ALi,idx.comp]]$mean) != p)) |
+          ((mapafit[[ALi,idx.comp]]$pr.comp == 0) & (length(mapafit[[ALi,idx.x]]) != p))){
         stop("Number of xreg input variables does not match mapafit specification.")
       }
       # Preprocess if needed

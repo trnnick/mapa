@@ -1,3 +1,6 @@
+# CHANGES IN MAPA VERSION 2.0.2 (11 Nov 2016)
+- Fixed bug in mapacalc when mapaest uses pr.comp=-1.
+
 # CHANGES IN MAPA VERSION 2.0.1 (01 Nov 2016)
 
 ## NEW FEATURES
