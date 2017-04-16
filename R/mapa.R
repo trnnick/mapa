@@ -138,7 +138,7 @@ mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb){
       season <- array(season,c(1,length(season)))
     }
     if (!is.array(xreg)){
-      trend <- array(xreg,c(1,length(xreg)))
+      xreg <- array(xreg,c(1,length(xreg)))
     }
     if (comb=="mean"){ # alternative averaging operators
       forecasts <- colSums(rbind(colMeans(level),colMeans(trend),
