@@ -462,10 +462,11 @@ plot.mapa.fit <- function(x,xreg.plot=c(TRUE,FALSE),...){
       
       # Get ES components
       components <- x[[AL, 1]]
-      components <- substring(components,5,nchar(components))
-      components <- substring(components,1,nchar(components)-1)
-      mn <- nchar(components)
-      components <- substring(components, seq(1,mn,1), seq(1,mn,1))
+      components <- strsplit(components,"")
+      locstart <- which(unlist(lapply(components,function(x){x=="("})))
+      locend <- which(unlist(lapply(components,function(x){x==")"})))
+      components <- components[[1]][(locstart+1):(locend-1)]
+      mn <- length(components)
       if (mn == 4){
         components <- c(components[1],paste0(components[2],components[3]),components[mn])
       }

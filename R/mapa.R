@@ -67,7 +67,7 @@ mapa <- function(y, ppy=NULL, fh=ppy, ifh=1, minimumAL=1, maximumAL=ppy,
 #   out$MAE     = In-sample MAE error
   
   # Defaults
-  comb <- comb[1]
+  comb <- match.arg(comb,c("mean","median","w.mean","w.median","wght"))
   paral <- paral[1]
   display <- display[1]
   outplot <- outplot[1]
@@ -422,7 +422,7 @@ mapasimple <- function(y, ppy=NULL, fh=ppy, minimumAL=1, maximumAL=ppy, comb=c("
   }  
   
   # Defaults
-  comb <- comb[1]
+  comb <- match.arg(comb,c("mean","median","w.mean","w.median","wght"))
   paral <- paral[1]
   display <- display[1]
   outplot <- outplot[1]

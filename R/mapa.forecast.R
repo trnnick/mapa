@@ -155,7 +155,7 @@ mapacalc <- function(y, mapafit, fh=0, comb=c("mean", "median", "w.mean", "w.med
   #   forecasts   = Vector with forecasts
   #   components  = array with MAPA components
   
-  comb <- comb[1]
+  comb <- match.arg(comb,c("mean","median","w.mean","w.median","wght"))
   outplot <- outplot[1]
   hybrid <- hybrid[1]
   
@@ -339,7 +339,7 @@ mapafor <- function(y, mapafit, fh=-1, ifh=1, comb=c("mean","median","w.mean","w
   #   out$MSE     = In-sample MSE error.
   #   out$MAE     = In-sample MAE error.
   
-  comb <- comb[1]
+  comb <- match.arg(comb,c("mean","median","w.mean","w.median","wght"))
   outplot <- outplot[1]
   hybrid <- hybrid[1]
   
