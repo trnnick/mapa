@@ -431,6 +431,9 @@ plot.mapa.fit <- function(x,xreg.plot=c(TRUE,FALSE),...){
   maximumAL <- max(ALs)
   ppy <- as.numeric(x[1,idx.ppy])
   
+  # Get permitted seasonal levels
+  perm_seas <- (ppy %% minimumAL:maximumAL) == 0 & (minimumAL:maximumAL < ppy)
+  
   # Plot model selection summary
   ALplot <- 1:(maximumAL-minimumAL+1)
   ALplot <- ALplot[unlist(x[,idx.use])==TRUE]
@@ -521,6 +524,11 @@ plot.mapa.fit <- function(x,xreg.plot=c(TRUE,FALSE),...){
         ylab="Components", xlab="Aggregation Level", main=ttl,breaks=c(-1,0,1,1.5,2,2.5))
   axis(2, at=1:(3+x.add), labels=list("Error","Trend","Season","Xreg")[(3+x.add):1])
   axis(1, at=min(comps[,4+x.add]):max(comps[,4+x.add]))
+  # Grey seasonality
+  k <- 1+x.add 
+  for (AL in which(!perm_seas)){
+    polygon(c((AL-0.5)*c(1,1),(AL+0.5)*c(1,1)),c(.5+k,-.5+k,-.5+k,.5+k),col="gray60",border=NA)
+  }
   box()
   
   for (i in 1:(4+x.add)){
