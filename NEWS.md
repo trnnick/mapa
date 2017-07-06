@@ -1,5 +1,6 @@
 # CHANGES IN MAPA VERSION 2.0.3 (04 Jul 2017)
 - Minor improvement in plotting mapa.fit class objects. Now levels for which no seasonality is estimated are in grey.
+- Accomondate changes in smooth::es output.
 
 # CHANGES IN MAPA VERSION 2.0.2 (06 Jun 2017)
 - Fixed bug in mapacalc when mapaest uses pr.comp=-1.

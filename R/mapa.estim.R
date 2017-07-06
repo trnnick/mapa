@@ -301,7 +301,16 @@ mapaest.loop <- function(ALi, y, minimumAL, maximumAL, observations,
       }
       # Turn off warnings for es - this is done when the model reduces pool 
       # due to sample size.
-      fit <- suppressWarnings(es(ats,model=mapa.model,silent="all",xreg=xregA, ...))
+      fittemp <- suppressWarnings(es(ats,model=mapa.model,silent="all",xreg=xregA, ...))
+      # Let's make sure changes in the output of es do not break mapa (again!)
+      acceptres <- c("model","timeElapsed","states","persistence","phi",
+                     "initialType","initial","initialSeason","nParam",
+                     "fitted","forecast","lower","upper","residuals",
+                     "errors","s2","intervals","level","actuals",
+                     "holdout","iprob","intermittent","xreg",
+                     "updateX","initialX","persistenceX","transitionX",
+                     "ICs","cf","cfType","FI","accuracy")
+      fit <- fittemp[unlist(lapply(acceptres,function(x){which(names(fittemp) == x)}))]
             
     }
     
