@@ -80,7 +80,7 @@ mapaest <- function(y, ppy=NULL, minimumAL=1, maximumAL=ppy, paral=c(0,1,2), dis
       p <- 1
     }
     xreg <- matrix(xreg,ncol=p)
-    # Check that it contains at least n observatoins and trim
+    # Check that it contains at least n observations and trim
     xn <- dim(xreg)[1]
     if (xn < n){
       stop("Number of observations of xreg must be equal of exceed the length of y.")
@@ -307,7 +307,7 @@ mapaest.loop <- function(ALi, y, minimumAL, maximumAL, observations,
                      "initialType","initial","initialSeason","nParam",
                      "fitted","forecast","lower","upper","residuals",
                      "errors","s2","intervals","level","actuals",
-                     "holdout","iprob","intermittent","xreg",
+                     "holdout","imodel","cumulative","xreg",
                      "updateX","initialX","persistenceX","transitionX",
                      "ICs","cf","cfType","FI","accuracy")
       fit <- fittemp[unlist(lapply(acceptres,function(x){which(names(fittemp) == x)}))]
@@ -333,8 +333,8 @@ mapaest.loop <- function(ALi, y, minimumAL, maximumAL, observations,
                   "fitted"=NULL,"forecast"=NULL,"lower"=NULL,
                   "upper"=NULL,"residuals"=NULL,"errors"=NULL,
                   "s2"=NULL,"intervals"=NULL,"level"=NULL,
-                  "actuals"=NULL,"holdout"=NULL,"iprob"=NULL,
-                  "intermittent"=NULL,"xreg"=NULL,"updateX"=NULL,
+                  "actuals"=NULL,"holdout"=NULL,"imodel"=NULL,
+                  "cumulative"=NULL,"xreg"=NULL,"updateX"=NULL,
                   "initialX"=NULL,"persistenceX"=NULL,"transitionX"=NULL,
                   "ICs"=NULL,"cf"=NULL,"cfType"=NULL,"FI"=NULL,
                   "accuracy"=NULL,"use"=FALSE)
