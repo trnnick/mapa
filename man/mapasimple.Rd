@@ -7,9 +7,9 @@ It is not suggested, unless only simple single origin forecasts are required.
 }
 \usage{
 mapasimple(y, ppy=NULL, fh=ppy, minimumAL=1, maximumAL=ppy, 
-           comb=c("mean","median","w.mean","w.median","wght"), 
+           comb=c("w.mean","w.median","mean","median","wght"), 
            paral=c(0,1,2), display=c(0,1), 
-           outplot=c(1,0), hybrid=c(TRUE,FALSE), model="ZZZ", 
+           outplot=c(0,1), hybrid=c(TRUE,FALSE), model="ZZZ", 
            type=c("ets","es"), xreg=NULL, pr.comp=0, ...)
 }
 \arguments{

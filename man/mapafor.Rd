@@ -7,8 +7,8 @@ The following function produces in- and out-of-sample MAPA forecasts, for multip
 }
 \usage{
 mapafor(y, mapafit, fh = -1, ifh = 1, 
-        comb = c("mean","median","w.mean","w.median","wght"), 
-        outplot = c(1,0), hybrid = c(TRUE, FALSE), 
+        comb = c("w.mean","w.median","mean","median","wght"), 
+        outplot = c(0,1), hybrid = c(TRUE, FALSE), 
         conf.lvl = NULL, xreg=NULL)
 }
 \arguments{

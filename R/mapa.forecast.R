@@ -58,7 +58,6 @@ statetranslate <- function(fit,AL,fh,q,ppyA,fittype,ets.type){
     
   } else if (ets.type == "es"){
     # Handle es from smooth package
-    
     init.obs <- max(1,length(fit$initialSeason))
     phi <- fit$phi
     
@@ -92,7 +91,7 @@ statetranslate <- function(fit,AL,fh,q,ppyA,fittype,ets.type){
     
     # Estimates for the Seasonal Component 
     # sc <- dim(fit$states)[2]
-    sc <- which(colnames(fit$states) == "seasonality")
+    sc <- which(colnames(fit$states) == "seasonal")
     if (components[3]=="N"){ # no seasonality
       FCs_temp[4, ] <- 0
     } else if (components[3]=="A"){ # additive seasonality
@@ -130,7 +129,7 @@ statetranslate <- function(fit,AL,fh,q,ppyA,fittype,ets.type){
 }
 
 #-------------------------------------------------
-mapacalc <- function(y, mapafit, fh=0, comb=c("mean", "median", "w.mean", "w.median", "wght"),
+mapacalc <- function(y, mapafit, fh=0, comb=c("w.mean", "w.median", "mean", "median", "wght"),
                      outplot=c(0,1,2), hybrid=c(TRUE,FALSE), xreg=NULL){
   # Calculation of MAPA forecasts
   # 
@@ -155,7 +154,7 @@ mapacalc <- function(y, mapafit, fh=0, comb=c("mean", "median", "w.mean", "w.med
   #   forecasts   = Vector with forecasts
   #   components  = array with MAPA components
   
-  comb <- match.arg(comb,c("mean","median","w.mean","w.median","wght"))
+  comb <- match.arg(comb,c("w.mean","w.median","mean","median","wght"))
   outplot <- outplot[1]
   hybrid <- hybrid[1]
   
@@ -257,7 +256,7 @@ mapacalc <- function(y, mapafit, fh=0, comb=c("mean", "median", "w.mean", "w.med
       ats.fit <- ets(ats, AL.fit, use.initial.values=TRUE)
 
     } else if (ets.type=="es"){
-      
+
       AL.fit <- structure(mapafit[ALi,1:32], class = "smooth")
       ats.fit <- suppressWarnings(es(ats, model=AL.fit, h=fhA, silent="all",xreg=xregA))
       
@@ -308,8 +307,8 @@ print.mapa.calc <- function(x,...){
 }
 
 #-------------------------------------------------
-mapafor <- function(y, mapafit, fh=-1, ifh=1, comb=c("mean","median","w.mean","w.median","wght"), 
-                    outplot=c(1,0), hybrid=c(TRUE,FALSE), conf.lvl=NULL, xreg=NULL) {
+mapafor <- function(y, mapafit, fh=-1, ifh=1, comb=c("w.mean","w.median","mean","median","wght"), 
+                    outplot=c(0,1), hybrid=c(TRUE,FALSE), conf.lvl=NULL, xreg=NULL) {
   # MAPA in- and out-of-sample forecast
   # 
   # Inputs:
@@ -339,7 +338,7 @@ mapafor <- function(y, mapafit, fh=-1, ifh=1, comb=c("mean","median","w.mean","w
   #   out$MSE     = In-sample MSE error.
   #   out$MAE     = In-sample MAE error.
   
-  comb <- match.arg(comb,c("mean","median","w.mean","w.median","wght"))
+  comb <- match.arg(comb,c("w.mean","w.median","mean","median","wght"))
   outplot <- outplot[1]
   hybrid <- hybrid[1]
   

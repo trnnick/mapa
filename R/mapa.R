@@ -3,7 +3,7 @@
 
 #-------------------------------------------------
 mapa <- function(y, ppy=NULL, fh=ppy, ifh=1, minimumAL=1, maximumAL=ppy, 
-	comb=c("mean","median","w.mean","w.median","wght"), paral=c(0,1,2), display=c(0,1), outplot=c(1,0), 
+	comb=c("w.mean","w.median","mean","median","wght"), paral=c(0,1,2), display=c(0,1), outplot=c(0,1), 
 	hybrid=c(TRUE,FALSE), model="ZZZ", type=c("ets","es"), conf.lvl=NULL, 
 	xreg=NULL, pr.comp=0, ...){
 # Wrapper to estimate and produce MAPA in- and out-of-sample forecasts
@@ -67,7 +67,7 @@ mapa <- function(y, ppy=NULL, fh=ppy, ifh=1, minimumAL=1, maximumAL=ppy,
 #   out$MAE     = In-sample MAE error
   
   # Defaults
-  comb <- match.arg(comb,c("mean","median","w.mean","w.median","wght"))
+  comb <- match.arg(comb,c("w.mean","w.median","mean","median","wght"))
   paral <- paral[1]
   display <- display[1]
   outplot <- outplot[1]
@@ -353,8 +353,8 @@ mapaplot <- function(outplot,FCs,minimumAL,maximumAL,perm_levels,perm_seas,
 }
 
 #-------------------------------------------------
-mapasimple <- function(y, ppy=NULL, fh=ppy, minimumAL=1, maximumAL=ppy, comb=c("mean","median","w.mean","w.median","wght"), 
-                       paral=c(0,1,2), display=c(0,1), outplot=c(1,0), hybrid=c(TRUE,FALSE), 
+mapasimple <- function(y, ppy=NULL, fh=ppy, minimumAL=1, maximumAL=ppy, comb=c("w.mean","w.median","mean","median","wght"), 
+                       paral=c(0,1,2), display=c(0,1), outplot=c(0,1), hybrid=c(TRUE,FALSE), 
                        model="ZZZ", type=c("ets","es"), xreg=NULL, pr.comp=0, ...){
   # MAPA estimation and forecast
   #  
@@ -422,7 +422,7 @@ mapasimple <- function(y, ppy=NULL, fh=ppy, minimumAL=1, maximumAL=ppy, comb=c("
   }  
   
   # Defaults
-  comb <- match.arg(comb,c("mean","median","w.mean","w.median","wght"))
+  comb <- match.arg(comb,c("w.mean","w.median","mean","median","wght"))
   paral <- paral[1]
   display <- display[1]
   outplot <- outplot[1]

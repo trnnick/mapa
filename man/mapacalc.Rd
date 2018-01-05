@@ -6,7 +6,7 @@ The following function produces a simple MAPA forecast from a given origin.
 This is meant to be an internal function. Use mapafor instead.
 }
 \usage{
-mapacalc(y, mapafit, fh = 0, comb = c("mean","median","w.mean","w.median","wght"), 
+mapacalc(y, mapafit, fh = 0, comb = c("w.mean","w.median","mean","median","wght"), 
          outplot = c(0,1,2), hybrid = c(TRUE,FALSE), xreg=NULL)
 }
 \arguments{

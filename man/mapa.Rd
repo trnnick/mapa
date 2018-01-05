@@ -8,8 +8,8 @@ Uses mapaest and mapafor.}
 
 \usage{
 mapa(y, ppy, fh=ppy, ifh=1, minimumAL=1, maximumAL=ppy, 
-     comb=c("mean","median","w.mean","w.median","wght"), paral=c(0,1,2), 
-     display=c(0,1), outplot=c(1,0), hybrid=c(TRUE,FALSE), model="ZZZ", 
+     comb=c("w.mean","w.median","mean","median","wght"), paral=c(0,1,2), 
+     display=c(0,1), outplot=c(0,1), hybrid=c(TRUE,FALSE), model="ZZZ", 
      type=c("ets","es"), conf.lvl=NULL, xreg=NULL, pr.comp=0, ...)
 }
 
