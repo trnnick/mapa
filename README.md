@@ -6,10 +6,7 @@ Mutliple Aggregation Prediction Algorithm (MAPA)
 
 
 Development repository for the MAPA package for R.
-
 Stable version can be found at: https://cran.r-project.org/web/packages/MAPA/index.html
-
-<img src="https://github.com/trnnick/mapa/blob/4f3ecc96c06064a91e6f26651493c72ac9120abd/mapa-hex.PNG" height="150"/>
 
 Functions and wrappers for using the Multiple Aggregation Prediction Algorithm (MAPA) for time series forecasting. MAPA models and forecasts time series at multiple temporal aggregation levels, thus strengthening and attenuating the various time series components for better holistic estimation of its structure. 
 

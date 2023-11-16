@@ -1,0 +1,51 @@
+Version 1.9.1 (24 May 2016)
+  * Fixed bug introduced by changes in the initialisation of ETS when n < 3*s and seasonality (s) = 2. 
+    The fix does not permit seasonal models in that case. If n >= 3*s seasonality is permitted. 
+
+Version 1.9 (21 November 2014)
+  * Corrected bug in mapafor when ifh == 0 and prediction intervals were requested.
+  * Added more detailed package description.
+
+Version 1.8 (03 October 2014)
+  * Corrected bug for very short time series.
+
+Version 1.7 (31 July 2014)
+  * Added plotmapa function to visualise fitted MAPA without need to re-estimate
+  * Removed dependence on 'miscTools' package for calculation of medians by columns
+  * Corrections in .Rd files
+
+Version 1.6 (03 July 2014)
+  * Added non-overlapping temporal aggregation function (tsaggr).
+  * Added URL info in description.
+  * Corrected bug in mapaest when actual was constant (ets returned 
+    different structure).
+
+Version 1.5 (04 June 2014)
+  * Added empirical prediction intervals for mapa and mapafor.
+  * Added return to some functions that were missing it.
+  * Plots in mapaest and mapafor re-initialise the plot figure.
+  * Variable name insample replaced with y.
+  * Added more help details for mapasimple and mapacalc outplot input.
+  * Corrected bug in mapa that would not transfer model to mapaest.
+  * Corrected bug in mapafor when ppy was equal to 1.
+  * Corrected bug in mapasimple when fh was equal to 1. The bug was
+    caused by the introduction of the model option in v1.4. 
+
+Version 1.4 (13 May 2014)
+  * Added model option for mapa, mapasimple and mapaest.
+
+Version 1.3 (15 April 2014)
+  * Corrected bug with minimumAL. Now minimumAL can be > 1.
+  * Corrected ylim when outplot=2 for the component plots.
+  * Added links to the help files. 
+	
+Version 1.2 (24 March 2014)
+  * Stopped using forecast:::pegelsresid.C. New forecast package (v5.3) 
+    allows keeping initial values constant.
+
+Version 1.1 (Not in CRAN)
+  * Switched from doSNOW to parallel.
+  * Introduced NAMESPACE.
+	
+Version 1.0 (Not in CRAN)
+  * Initial version.

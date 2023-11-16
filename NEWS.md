@@ -1,3 +1,10 @@
+# CHANGES IN MAPA VERSION 2.0.6 (12 NOV 2023)
+- Fixed smooth related dependencies.
+
+# CHANGES IN MAPA VERSION 2.0.5 (10 JUL 2021)
+- Updated class ckecks.
+- Updated links in help files.
+
 # CHANGES IN MAPA VERSION 2.0.4 (05 JAN 2018)
 - Updated statetranslate() to handle changes in smooth package (state name "seasonality" changed to "seasonal")
 - By default all functions does not produce plots anymore.

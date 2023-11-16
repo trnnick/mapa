@@ -1,7 +1,7 @@
 # These functions handle forecasting using MAPA
 # Nikolaos Kourentzes 2016
 
-statetranslate <- function(fit,AL,fh,q,ppyA,fittype,ets.type){
+statetranslate <- function(fit,AL,fh,q,ppyA,fittype,ets.type,xreg=NULL){
   # This function prepares ets states for MAPA combination
   # It extrapolates from last states the forecasts and translates to additive
   
@@ -58,13 +58,13 @@ statetranslate <- function(fit,AL,fh,q,ppyA,fittype,ets.type){
     
   } else if (ets.type == "es"){
     # Handle es from smooth package
-    init.obs <- max(1,length(fit$initialSeason))
+    init.obs <- max(1,length(fit$initial$seasonal))
     phi <- fit$phi
-    
+
     # Get model components
-    components <- fit$model
-    components <- substring(components,5,nchar(components))
-    components <- substring(components,1,nchar(components)-1)
+    components <- modelType(fit)
+    # components <- substring(components,5,nchar(components))
+    # components <- substring(components,1,nchar(components)-1)
     mn <- nchar(components)
     components <- substring(components, seq(1,mn,1), seq(1,mn,1))
     if (mn == 4){
@@ -76,13 +76,13 @@ statetranslate <- function(fit,AL,fh,q,ppyA,fittype,ets.type){
     
     # Estimates for the Trend Component
     if (components[2]=="A"){ # additive trend
-      FCs_temp[3, ] <- as.numeric(rep(fit$states[q+1+init.obs, 2] * (1:fhA), each=AL))[1:fh]
+      FCs_temp[3, ] <- as.numeric(rep(fit$states[q+init.obs, 2] * (1:fhA), each=AL))[1:fh]
     } else if (components[2]=="Ad"){ # additive damped trend
-      FCs_temp[3, ] <- as.numeric(rep(cumsum((fit$states[q+1+init.obs, 2]/phi)* phi^(1:fhA)), each=AL))[1:fh]
+      FCs_temp[3, ] <- as.numeric(rep(cumsum((fit$states[q+init.obs, 2]/phi)* phi^(1:fhA)), each=AL))[1:fh]
     } else if (components[2]=="M"){ # multiplicative trend
-      FCs_temp[3, ] <- as.numeric(rep((fit$states[q+1+init.obs,2]^(1:fhA)-1), each=AL)[1:fh] * FCs_temp[2,])
+      FCs_temp[3, ] <- as.numeric(rep((fit$states[q+init.obs,2]^(1:fhA)-1), each=AL)[1:fh] * FCs_temp[2,])
     } else if (components[2]=="Md"){ # multiplicative damped trend
-      FCs_temp[3, ] <- as.numeric(rep((((fit$states[q+1+init.obs,2] ^ (1/phi)) ^ cumsum(phi^(1:fhA)))-1), 
+      FCs_temp[3, ] <- as.numeric(rep((((fit$states[q+init.obs,2] ^ (1/phi)) ^ cumsum(phi^(1:fhA)))-1), 
                                       each=AL)[1:fh] * FCs_temp[2, ])  
     } else {
       # No trend
@@ -91,23 +91,33 @@ statetranslate <- function(fit,AL,fh,q,ppyA,fittype,ets.type){
     
     # Estimates for the Seasonal Component 
     # sc <- dim(fit$states)[2]
+    
     sc <- which(colnames(fit$states) == "seasonal")
     if (components[3]=="N"){ # no seasonality
       FCs_temp[4, ] <- 0
     } else if (components[3]=="A"){ # additive seasonality
-      FCs_temp[4, ] <- as.numeric(rep(rep(fit$states[(q+1+init.obs):(q+ppyA+init.obs),sc], fhA), each=AL))[1:fh]
+      FCs_temp[4, ] <- as.numeric(rep(rep(fit$states[(q+init.obs-ppyA+1):(q+init.obs),sc], fhA), each=AL))[1:fh]
     } else { # multiplicative seasonality
-      FCs_temp[4, ] <- as.numeric((rep(rep(fit$states[(q+1+init.obs):(q+ppyA+init.obs),sc], fhA),
+      FCs_temp[4, ] <- as.numeric((rep(rep(fit$states[(q+init.obs-ppyA+1):(q+init.obs),sc], fhA),
                                        each=AL)[1:fh] - 1)) * (FCs_temp[2, ] + FCs_temp[3, ])
     }
     
     # Estimate for the xreg 
-    xreg <- fit$xreg
+    # No longer paer of es - added externally
+    # if (dim(fit$data)[2]>1){
+    #   xreg <- fit$data[,-1,drop=FALSE]  
+    # } else {
+    #   xreg <- NULL
+    # }
+    
     if (!is.null(xreg)){
+      # Check sample once the es() data is correctly carried forward
       if (!is.null(dim(xreg))){
-        FCs_temp[5, ] <- as.numeric(rep( colSums(t(xreg[(q+1):(q+fhA),] * matrix(rep(fit$initialX,fhA),nrow=fhA,byrow=TRUE))) , each=AL))[1:fh]
+        FCs_temp[5, ] <- as.numeric(rep(colSums(t(xreg * matrix(rep(fit$initial$xreg,fhA),nrow=fhA,byrow=TRUE))) , each=AL))[1:fh]
+        # FCs_temp[5, ] <- as.numeric(rep(colSums(t(xreg[(q+1):(q+fhA),] * matrix(rep(fit$initial$xreg,fhA),nrow=fhA,byrow=TRUE))) , each=AL))[1:fh]
       } else {
-        FCs_temp[5, ] <- as.numeric(rep(xreg[(q+1):(q+fhA)] * fit$initialX, each=AL))[1:fh]
+        FCs_temp[5, ] <- as.numeric(rep(xreg * fit$initial$xreg, each=AL))[1:fh]
+        # FCs_temp[5, ] <- as.numeric(rep(xreg[(q+1):(q+fhA)] * fit$initial$xreg, each=AL))[1:fh]
       }
     }
     
@@ -209,7 +219,6 @@ mapacalc <- function(y, mapafit, fh=0, comb=c("w.mean", "w.median", "mean", "med
     
     AL <- ALvec[ALi]
     fhA <- ceiling(fh/AL)   # This is used for es and xreg preprocessing
-    
     q <- observations %/% AL # observation in the aggregated level
     ppyA <- ppy %/% AL       # periods per year for the aggregated level
     if (ppy %% AL != 0){
@@ -236,9 +245,9 @@ mapacalc <- function(y, mapafit, fh=0, comb=c("w.mean", "w.median", "mean", "med
 
       # Check that mapafit expected xreg matches xreg input
       # Either pr.comp = 0 and check number of x's or pr.comp > 0 and x's should be >= pr.comp
-      idx.x <- which(colnames(mapafit)=="initialX")
+      idx.x <- which(colnames(mapafit)=="initial")
       if (((mapafit[[ALi,idx.comp]]$pr.comp > 0) & (length(mapafit[[ALi,idx.comp]]$mean) != p)) |
-          ((mapafit[[ALi,idx.comp]]$pr.comp == 0) & (length(mapafit[[ALi,idx.x]]) != p))){
+          ((mapafit[[ALi,idx.comp]]$pr.comp == 0) & (length(mapafit[[ALi,idx.x]]$xreg) != p))){
         stop("Number of xreg input variables does not match mapafit specification.")
       }
       # Preprocess if needed
@@ -254,16 +263,20 @@ mapacalc <- function(y, mapafit, fh=0, comb=c("w.mean", "w.median", "mean", "med
       
       AL.fit <- structure(mapafit[ALi,1:18],class="ets")
       ats.fit <- ets(ats, AL.fit, use.initial.values=TRUE)
+      xregF <- NULL
 
     } else if (ets.type=="es"){
-
-      AL.fit <- structure(mapafit[ALi,1:32], class = "smooth")
-      ats.fit <- suppressWarnings(es(ats, model=AL.fit, h=fhA, silent="all",xreg=xregA))
+      
+      smoothLength <- mapafit[ALi,]$smoothLength
+      AL.fit <- structure(mapafit[ALi,1:smoothLength], class = c("adam","smooth"))
+      ats.fit <- suppressWarnings(es(ats, model=AL.fit, h=fhA, silent=TRUE,xreg=xregA))
+      # Smooth no longer store the future xreg, pass it as a separate object
+      xregF <- tail(xregA,fhA)
       
     }
     
     # Transalte ets states for MAPA
-    FCs_temp <- statetranslate(ats.fit,AL,fh,q,ppyA,1,ets.type)
+    FCs_temp <- statetranslate(ats.fit,AL,fh,q,ppyA,1,ets.type,xreg=xregF)
     
     # Return MAPA components
     FCs[ALi, , ] <- FCs_temp

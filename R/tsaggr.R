@@ -32,7 +32,7 @@ tsaggr <- function(y,fout,fmean=c(FALSE,TRUE),outplot=c(FALSE,TRUE)){
   n <- length(y)
   
   # Get original frequency if y is ts
-  if (class(y)=="ts"){
+  if (isa(y,"ts")){
     f <- frequency(y)
   } else {
     f <- NULL

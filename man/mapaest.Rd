@@ -57,7 +57,7 @@ mapaest(y, ppy, minimumAL = 1, maximumAL = ppy, paral = c(0,1,2),
         \item{Kourentzes N., Petropoulos F., Trapero J.R. (2014) Improving forecasting by estimating time 
 series structural components across multiple frequencies. \emph{International Journal of Forecasting}, \bold{30}(\bold{2}), 291--302.}
         \item{Kourentzes N., Petropoulos F. (2015) Forecasting with multivariate temporal aggregation: The case of promotional modelling. \emph{International Journal of Production Economics}.}
-        \item{You can find more information about MAPA at Nikos' \href{http://kourentzes.com/forecasting/tag/mapa/}{blog}.}
+        \item{You can find more information about MAPA at Nikos' \href{https://kourentzes.com/forecasting/tag/mapa/}{blog}.}
   }
 }
 \author{

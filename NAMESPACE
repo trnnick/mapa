@@ -4,7 +4,7 @@ importFrom("grDevices", "col2rgb", "heat.colors", "rainbow", "rgb", "colorRampPa
 importFrom("graphics", "axis", "image", "layout", "legend", "lines", "plot", "points", "polygon", "text", "box")
 importFrom("stats", "frequency", "median", "qnorm", "ts", "prcomp", "sd")
 importFrom("utils", "tail")
-importFrom("smooth", "es")
+importFrom("smooth", "es", "modelType")
 
 export(mapa,mapasimple,mapaest,mapacalc,mapafor,tsaggr,plotmapa)
 

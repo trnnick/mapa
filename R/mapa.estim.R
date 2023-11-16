@@ -54,7 +54,7 @@ mapaest <- function(y, ppy=NULL, minimumAL=1, maximumAL=ppy, paral=c(0,1,2), dis
   
   # Get ppy and maximumAL
   if (is.null(ppy)){
-    if (class(y)=="ts"){
+    if (isa(y,"ts")){
       ppy <- frequency(y)
       if (is.null(maximumAL)){maximumAL <- ppy}
     } else {
@@ -293,6 +293,7 @@ mapaest.loop <- function(ALi, y, minimumAL, maximumAL, observations,
       }
       
     } else if (type == "es"){
+      
       # When xreg is a single column array es wants the input as a vector
       if (!is.null(xreg)){
         if (dim(xregA)[2] ==1){
@@ -301,16 +302,17 @@ mapaest.loop <- function(ALi, y, minimumAL, maximumAL, observations,
       }
       # Turn off warnings for es - this is done when the model reduces pool 
       # due to sample size.
-      fittemp <- suppressWarnings(es(ats,model=mapa.model,silent="all",xreg=xregA, ...))
-      # Let's make sure changes in the output of es do not break mapa (again!)
-      acceptres <- c("model","timeElapsed","states","persistence","phi",
-                     "initialType","initial","initialSeason","nParam",
-                     "fitted","forecast","lower","upper","residuals",
-                     "errors","s2","intervals","level","actuals",
-                     "holdout","imodel","cumulative","xreg",
-                     "updateX","initialX","persistenceX","transitionX",
-                     "ICs","cf","cfType","FI","accuracy")
+      fittemp <- suppressWarnings(es(ats,model=mapa.model,silent=TRUE,xreg=xregA, ...))
+      acceptres <- c('model', 'timeElapsed', 'data', 'holdout', 'fitted', 
+                     'residuals', 'forecast', 'states', 'profile', 'profileInitial', 
+                     'persistence', 'phi', 'transition', 'measurement', 'initial', 
+                     'initialType', 'initialEstimated', 'orders', 'arma', 'constant', 
+                     'nParam', 'occurrence', 'formula', 'regressors', 'loss', 
+                     'lossValue', 'logLik', 'distribution', 'scale', 'other', 
+                     'B', 'lags', 'lagsAll', 'FI', 'ICs', 'call', 'bounds')
+      
       fit <- fittemp[unlist(lapply(acceptres,function(x){which(names(fittemp) == x)}))]
+      fit$smoothLength <- length(fit)
             
     }
     
@@ -327,17 +329,17 @@ mapaest.loop <- function(ALi, y, minimumAL, maximumAL, observations,
                   "components"=NULL,"call"=NULL,"initstate"=NULL,
                   "sigma2"=NULL,"x"=NULL,"use"=FALSE)
     } else if (type == "es"){
-      fit <- list("model"=NULL,"timeElapsed"=NULL,"states"=NULL,
-                  "persistence"=NULL,"phi"=NULL,"initialType"=NULL,
-                  "initial"=NULL,"initialSeason"=NULL,"nParam"=NULL,
-                  "fitted"=NULL,"forecast"=NULL,"lower"=NULL,
-                  "upper"=NULL,"residuals"=NULL,"errors"=NULL,
-                  "s2"=NULL,"intervals"=NULL,"level"=NULL,
-                  "actuals"=NULL,"holdout"=NULL,"imodel"=NULL,
-                  "cumulative"=NULL,"xreg"=NULL,"updateX"=NULL,
-                  "initialX"=NULL,"persistenceX"=NULL,"transitionX"=NULL,
-                  "ICs"=NULL,"cf"=NULL,"cfType"=NULL,"FI"=NULL,
-                  "accuracy"=NULL,"use"=FALSE)
+      fit <- list('model'=NULL, 'timeElapsed'=NULL, 'data'=NULL, 'holdout'=NULL, 
+                  'fitted'=NULL, 'residuals'=NULL, 'forecast'=NULL, 'states'=NULL, 
+                  'profile'=NULL, 'profileInitial'=NULL, 'persistence'=NULL, 
+                  'phi'=NULL, 'transition'=NULL, 'measurement'=NULL, 'initial'=NULL, 
+                  'initialType'=NULL, 'initialEstimated'=NULL, 'orders'=NULL, 
+                  'arma'=NULL, 'constant'=NULL, 'nParam'=NULL, 'occurrence'=NULL, 
+                  'formula'=NULL, 'regressors'=NULL, 'loss'=NULL, 'lossValue'=NULL, 
+                  'logLik'=NULL, 'distribution'=NULL, 'scale'=NULL, 'other'=NULL, 
+                  'B'=NULL, 'lags'=NULL, 'lagsAll'=NULL, 'FI'=NULL, 'ICs'=NULL, 
+                  'call'=NULL, 'bounds'=NULL, 
+                  'use'==FALSE)
     }
     
   }
@@ -404,8 +406,8 @@ print.mapa.fit <- function(x,...){
   } else if (ets.type == "es"){
     mdls <- x[unlist(x[,idx.use]),1]
     # Check for xreg
-    idx.x <- which(colnames(x)=="initialX")
-    x.n <- lapply(x[,idx.x],length)
+    idx.x <- which(colnames(x)=="initial")
+    x.n <- lapply(x[,idx.x],function(x){length(x$xreg)})
     x.n <- unlist(x.n[unlist(x[,idx.use])])
   }
   for (i in 1:(maximumAL-minimumAL+1)){
@@ -485,7 +487,8 @@ plot.mapa.fit <- function(x,xreg.plot=c(TRUE,FALSE),...){
       ttl <- "ES components"
       
       # Check for xreg
-      x.n[AL] <- length(x[[AL,which(colnames(x)=="initialX")]])
+      tempInit <- x[[AL,which(colnames(x)=="initial")]]
+      x.n[AL] <- length(tempInit$xreg)
       
     }
     
