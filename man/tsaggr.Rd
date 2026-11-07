@@ -24,7 +24,7 @@ tsaggr(
 
 \item{col.AL}{Vector of colours for the aggregated series in the plot. If NULL the spectral colouring scheme is used, with red the lowest and blue the highest aggregation level, as in the component plots of \code{\link{plot.mapa.calc}}.}
 
-\item{...}{Additional arguments passed to \code{plot}, for example \code{main}, \code{xlab} and \code{ylab}.}
+\item{...}{Additional arguments passed to \code{plot}, for example \code{main}, \code{xlab}, and \code{ylab}.}
 }
 \value{
 \item{out}{

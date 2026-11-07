@@ -124,7 +124,7 @@ statetranslate <- function(fit,AL,fh,q,ppyA,ets.type,xreg=NULL){
 #' @param mapafit Fitted MAPA model (from mapaest).
 #' @param fh Forecast horizon. Default = ppy. For compatibility with earlier versions, fh = 0 also gives the default.
 #' @param comb Combination operator. This can be: "mean"; "median"; "wght" - where each aggregation level is weighted inversly to aggregation; "w.mean" - level and trend components are averaged, but seasonal and xreg follow the wght combination; "w.median" - as w.mean, but with median. It is suggested that for data with high sampling frequency to use one of the "w.mean" and "w.median".
-#' @param outplot Provide output plot. 0 = no; 1 = time series and forecast only; 2 = time series, forecasts and components. For the components the spectral colouring scheme is used. Red is the lowest aggregation level and blue the highest. Default is 0.
+#' @param outplot Provide output plot. 0 = no; 1 = time series and forecast only; 2 = time series, forecasts, and components. For the components the spectral colouring scheme is used. Red is the lowest aggregation level and blue the highest. Default is 0.
 #' @param hybrid Provide hybrid forecasts, as in Kourentzes et al. paper. If minimumAL > 1 then the minimumAL ETS forecasts are used. Default is TRUE.
 #' @param xreg Vector or matrix of exogenous variables to be included in the MAPA. If matrix then rows are observations and columns are variables. Must be at least as long as in-sample plus fh. Additional observations are unused.
 #'
@@ -132,7 +132,7 @@ statetranslate <- function(fit,AL,fh,q,ppyA,ets.type,xreg=NULL){
 #' \item{forecast}{Vector with forecasts. If y is a ts object, then this is also a ts object.}
 #' \item{components}{Array with MAPA components.}
 #' \item{combined}{Combined components across aggregation levels.}
-#' The output is of class \code{mapa.calc}, which also stores the time series and the settings used. It has \code{print}, \code{summary} and \code{plot} methods, see \code{\link{plot.mapa.calc}}.
+#' The output is of class \code{mapa.calc}, which also stores the time series and the settings used. It has \code{print}, \code{summary}, and \code{plot} methods, see \code{\link{plot.mapa.calc}}.
 #'
 #' @details
 #' If \code{mapafit} was estimated with xreg, then xreg must also be provided here, with the same variables and at least length(y) + fh observations, so that the values for the forecast horizon are available. See \code{\link{mapaest}} for details on the use of xreg.
@@ -377,10 +377,10 @@ print.summary.mapa.calc <- function(x,digits=max(3,getOption("digits")-3),...){
 #' @description The following function plots the forecasts produced by mapacalc or mapasimple, and optionally the forecasted components at each aggregation level. The black line in each component panel is the combination of the component across aggregation levels, as used for the forecasts. The plot is the same as the one that can be produced optionally by mapacalc.
 #'
 #' @param x MAPA forecasts (from mapacalc or mapasimple).
-#' @param components Plot the components. FALSE = no; TRUE = all available components. Alternatively a vector with any of "level", "trend", "season" and "xreg". Components that are not available are not plotted.
+#' @param components Plot the components. FALSE = no; TRUE = all available components. Alternatively a vector with any of "level", "trend", "season", and "xreg". Components that are not available are not plotted.
 #' @param col Vector of 2 colours for the time series and the forecasts. If NULL the default colours are used.
 #' @param col.AL Vector of colours for the components at each aggregation level. If NULL the spectral colouring scheme is used, with red the lowest and blue the highest aggregation level.
-#' @param ... Additional arguments passed to \code{plot} for the forecast panel, for example \code{main}, \code{xlab}, \code{ylab}, \code{xlim}, \code{ylim} and \code{lwd}.
+#' @param ... Additional arguments passed to \code{plot} for the forecast panel, for example \code{main}, \code{xlab}, \code{ylab}, \code{xlim}, \code{ylim}, and \code{lwd}.
 #'
 #' @note If y is a ts object, its time index is used for the horizontal axis. When only the forecasts are plotted the current graphical layout is respected, so the plot can be placed in a user defined grid. When components are plotted the layout is restored on exit.
 #'
@@ -521,7 +521,7 @@ plot.mapa.calc <- function(x,components=c(FALSE,TRUE),col=NULL,col.AL=NULL,...){
 #' \item{PI}{Prediction intervals for given confidence levels.}
 #' \item{MSE}{In-sample MSE error.}
 #' \item{MAE}{In-sample MAE error.}
-#' If y is a ts object, then outfor is also a ts object. The output is of class \code{mapa.for}, which also stores the time series and the settings used. It has \code{print}, \code{summary} and \code{plot} methods, see \code{\link{plot.mapa.for}}. The summary reports in-sample errors for each horizon.
+#' If y is a ts object, then outfor is also a ts object. The output is of class \code{mapa.for}, which also stores the time series and the settings used. It has \code{print}, \code{summary}, and \code{plot} methods, see \code{\link{plot.mapa.for}}. The summary reports in-sample errors for each horizon.
 #'
 #' @details
 #' If \code{mapafit} was estimated with xreg, then xreg must also be provided here, with the same variables and at least length(y) + fh observations, so that the values for the forecast horizon are available. See \code{\link{mapaest}} for details on the use of xreg.
@@ -853,7 +853,7 @@ print.summary.mapa.for <- function(x,digits=max(3,getOption("digits")-3),...){
 #' @param PI Plot the prediction intervals, if available.
 #' @param col Vector of 2 colours for the time series and the forecasts. If NULL the default colours are used.
 #' @param col.PI Colour for the prediction intervals. When multiple intervals are available these are shaded from this colour. If NULL, a lighter shade of the forecast colour is used, so the intervals follow any colour set with \code{col}.
-#' @param ... Additional arguments passed to \code{plot}, for example \code{main}, \code{xlab}, \code{ylab}, \code{xlim}, \code{ylim} and \code{lwd}.
+#' @param ... Additional arguments passed to \code{plot}, for example \code{main}, \code{xlab}, \code{ylab}, \code{xlim}, \code{ylim}, and \code{lwd}.
 #'
 #' @note If y is a ts object, its time index is used for the horizontal axis. The current graphical layout is respected, so the plot can be placed in a user defined grid.
 #'

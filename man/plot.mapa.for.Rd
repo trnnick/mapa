@@ -24,7 +24,7 @@
 
 \item{col.PI}{Colour for the prediction intervals. When multiple intervals are available these are shaded from this colour. If NULL, a lighter shade of the forecast colour is used, so the intervals follow any colour set with \code{col}.}
 
-\item{...}{Additional arguments passed to \code{plot}, for example \code{main}, \code{xlab}, \code{ylab}, \code{xlim}, \code{ylim} and \code{lwd}.}
+\item{...}{Additional arguments passed to \code{plot}, for example \code{main}, \code{xlab}, \code{ylab}, \code{xlim}, \code{ylim}, and \code{lwd}.}
 }
 \description{
 The following function plots the in- and out-of-sample forecasts and prediction intervals produced by mapafor or mapa. The plot is the same as the one that can be produced optionally by mapafor.

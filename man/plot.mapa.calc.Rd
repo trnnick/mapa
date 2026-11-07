@@ -9,13 +9,13 @@
 \arguments{
 \item{x}{MAPA forecasts (from mapacalc or mapasimple).}
 
-\item{components}{Plot the components. FALSE = no; TRUE = all available components. Alternatively a vector with any of "level", "trend", "season" and "xreg". Components that are not available are not plotted.}
+\item{components}{Plot the components. FALSE = no; TRUE = all available components. Alternatively a vector with any of "level", "trend", "season", and "xreg". Components that are not available are not plotted.}
 
 \item{col}{Vector of 2 colours for the time series and the forecasts. If NULL the default colours are used.}
 
 \item{col.AL}{Vector of colours for the components at each aggregation level. If NULL the spectral colouring scheme is used, with red the lowest and blue the highest aggregation level.}
 
-\item{...}{Additional arguments passed to \code{plot} for the forecast panel, for example \code{main}, \code{xlab}, \code{ylab}, \code{xlim}, \code{ylim} and \code{lwd}.}
+\item{...}{Additional arguments passed to \code{plot} for the forecast panel, for example \code{main}, \code{xlab}, \code{ylab}, \code{xlim}, \code{ylim}, and \code{lwd}.}
 }
 \description{
 The following function plots the forecasts produced by mapacalc or mapasimple, and optionally the forecasted components at each aggregation level. The black line in each component panel is the combination of the component across aggregation levels, as used for the forecasts. The plot is the same as the one that can be produced optionally by mapacalc.

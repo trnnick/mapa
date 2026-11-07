@@ -7,7 +7,7 @@
 #' @param fmean If TRUE the aggregated is done using mean, otherwise sum is used.
 #' @param outplot If TRUE a plot of the original series and the aggregated ones is produced.
 #' @param col.AL Vector of colours for the aggregated series in the plot. If NULL the spectral colouring scheme is used, with red the lowest and blue the highest aggregation level, as in the component plots of \code{\link{plot.mapa.calc}}.
-#' @param ... Additional arguments passed to \code{plot}, for example \code{main}, \code{xlab} and \code{ylab}.
+#' @param ... Additional arguments passed to \code{plot}, for example \code{main}, \code{xlab}, and \code{ylab}.
 #'
 #' @return
 #' \item{out}{

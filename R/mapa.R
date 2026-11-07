@@ -19,7 +19,7 @@
 #' @param display Display calculation progress in console. 0 = no; 1 = yes. Default is 0.
 #' @param outplot Provide output plot. 0 = no; 1 = yes. Default is 0.
 #' @param hybrid Provide hybrid forecasts, as in Kourentzes et al. paper. If minimumAL > 1 then the minimumAL ETS forecasts are used. Default is TRUE.
-#' @param model Allow only that type of ETS at each aggregation level. This follows similar coding to the ets function. The first letter refers to the error type ("A", "M" or "Z"); the second letter refers to the trend type ("N","A","Ad","M","Md", "Z", "X" or "Y"); and the third letter refers to the season type ("N","A","M", "Z", "X" or "Y"). The letters mean: "N"=none, "A"=additive, "M"=multiplicative, "Z"=automatically selected, "X"=automatically select between none and additive and "Y"=automatically select between none and multiplicative. A "d" for trend implies damped. "X" and "Y" supported only by type=="es". If used with type=="ets" a warning will be given and they will default to "Z". By default model="ZZZ". If due to sample limitation ETS cannot be calculated at an aggregation level for the selected model, then no estimation is done for that specific level.
+#' @param model Allow only that type of ETS at each aggregation level. This follows similar coding to the ets function. The first letter refers to the error type ("A", "M", or "Z"); the second letter refers to the trend type ("N","A","Ad","M","Md", "Z", "X", or "Y"); and the third letter refers to the season type ("N","A","M", "Z", "X", or "Y"). The letters mean: "N"=none, "A"=additive, "M"=multiplicative, "Z"=automatically selected, "X"=automatically select between none and additive, and "Y"=automatically select between none and multiplicative. A "d" for trend implies damped. "X" and "Y" supported only by type=="es". If used with type=="ets" a warning will be given and they will default to "Z". By default model="ZZZ". If due to sample limitation ETS cannot be calculated at an aggregation level for the selected model, then no estimation is done for that specific level.
 #' @param type What type of exponential smoothing implementation to use. "es" = use from the smooth package; "ets" = use from the forecast package. Default is "es"
 #' @param conf.lvl Vector of confidence level for prediction intervals. Values must be (0,1). If conf.lvl == NULL then no intervals are calculated. For example to get the intervals for 80\% and 95\% use conf.lvl=c(0.8,0.95).
 #' @param xreg Vector or matrix of exogenous variables to be included in the MAPA. If matrix then rows are observations and columns are variables. Must be at least as long as in-sample. Additional observations are unused. Note that including xreg will force type="es".
@@ -153,7 +153,7 @@ mapacomb <- function(ALs,ppy,FCs,comb){
   perm_seas <- (ppy %% ALs == 0) & (ALs<ppy)   # permitted seasonalities
   fh <- dim(FCs)[3]
   
-  # Combination operator for level, trend, season and xreg
+  # Combination operator for level, trend, season, and xreg
   operator <- switch(comb,
                      "mean"=rep("mean",4), # alternative averaging operators
                      "median"=rep("median",4),
@@ -191,7 +191,7 @@ mapacomb.comp <- function(X,ALs,operator){
 # Inputs:
 #   X           = Matrix of a component (aggregation levels x horizon).
 #   ALs         = Aggregation levels corresponding to the rows of X.
-#   operator    = "mean", "median" or "wght" - where each aggregation level 
+#   operator    = "mean", "median", or "wght" - where each aggregation level 
 #                 is weighted inversly to aggregation. 
   
   # No levels to combine, so the component does not contribute
@@ -234,9 +234,9 @@ mapacomb.comp <- function(X,ALs,operator){
 #' @param paral    Use parallel processing. 0 = no; 1 = yes (requires initialised cluster); 2 = yes
 #'   and initialise cluster. Default is 0.
 #' @param display Display calculation progress in console. 0 = no; 1 = yes. Default is 0.
-#' @param outplot Provide output plot. 0 = no; 1 = time series and forecast only; 2 = time series, forecasts and components. For the components the spectral colouring scheme is used. Red is the lowest aggregation level and blue the highest. Default is 0.
+#' @param outplot Provide output plot. 0 = no; 1 = time series and forecast only; 2 = time series, forecasts, and components. For the components the spectral colouring scheme is used. Red is the lowest aggregation level and blue the highest. Default is 0.
 #' @param hybrid Provide hybrid forecasts, as in Kourentzes et al. paper. If minimumAL > 1 then the minimumAL ETS forecasts are used. Default is TRUE.
-#' @param model Allow only that type of ETS at each aggregation level. This follows similar coding to the ets function. The first letter refers to the error type ("A", "M" or "Z"); the second letter refers to the trend type ("N","A","Ad","M","Md", "Z", "X" or "Y"); and the third letter refers to the season type ("N","A","M", "Z", "X" or "Y"). The letters mean: "N"=none, "A"=additive, "M"=multiplicative, "Z"=automatically selected, "X"=automatically select between none and additive and "Y"=automatically select between none and multiplicative. A "d" for trend implies damped. "X" and "Y" supported only by type=="es". If used with type=="ets" a warning will be given and they will default to "Z". By default model="ZZZ". If due to sample limitation ETS cannot be calculated at an aggregation level for the selected model, then no estimation is done for that specific level. For aggregation levels that seasonality becomes 1 then a non-seasonal model is estimated.
+#' @param model Allow only that type of ETS at each aggregation level. This follows similar coding to the ets function. The first letter refers to the error type ("A", "M", or "Z"); the second letter refers to the trend type ("N","A","Ad","M","Md", "Z", "X", or "Y"); and the third letter refers to the season type ("N","A","M", "Z", "X", or "Y"). The letters mean: "N"=none, "A"=additive, "M"=multiplicative, "Z"=automatically selected, "X"=automatically select between none and additive, and "Y"=automatically select between none and multiplicative. A "d" for trend implies damped. "X" and "Y" supported only by type=="es". If used with type=="ets" a warning will be given and they will default to "Z". By default model="ZZZ". If due to sample limitation ETS cannot be calculated at an aggregation level for the selected model, then no estimation is done for that specific level. For aggregation levels that seasonality becomes 1 then a non-seasonal model is estimated.
 #' @param type What type of exponential smoothing implementation to use. "es" = use from the smooth package; "ets" = use from the forecast package. Default is "es"
 #' @param xreg Vector or matrix of exogenous variables to be included in the MAPA. If matrix then rows are observations and columns are variables. Must be at least as long as in-sample. Additional observations are unused. Note that including xreg will force type="es".
 #' @param pr.comp MAPAx can use principal component analysis to preprocess xreg. When comp is -1 then the number of retained components is chosen automatically. When comp=0 then no pre-processing is performed and the original xreg is used. Any other value represents the number of principal components retained.

@@ -14,7 +14,7 @@
 #'   and initialise cluster. Default is 0.
 #' @param display Display calculation progress in console. 0 = no; 1 = yes. Default is 0.
 #' @param outplot Provide output plot. 0 = no; 1 or 2 = yes. Default is 0.
-#' @param model Allow only that type of ETS at each aggregation level. This follows similar coding to the ets function. The first letter refers to the error type ("A", "M" or "Z"); the second letter refers to the trend type ("N","A","Ad","M","Md", "Z", "X" or "Y"); and the third letter refers to the season type ("N","A","M", "Z", "X" or "Y"). The letters mean: "N"=none, "A"=additive, "M"=multiplicative, "Z"=automatically selected, "X"=automatically select between none and additive and "Y"=automatically select between none and multiplicative. A "d" for trend implies damped. "X" and "Y" supported only by type=="es". If used with type=="ets" a warning will be given and they will default to "Z". By default model="ZZZ". If due to sample limitation ETS cannot be calculated at an aggregation level for the selected model, then no estimation is done for that specific level. For aggregation levels that seasonality becomes 1 then a non-seasonal model is estimated.
+#' @param model Allow only that type of ETS at each aggregation level. This follows similar coding to the ets function. The first letter refers to the error type ("A", "M", or "Z"); the second letter refers to the trend type ("N","A","Ad","M","Md", "Z", "X", or "Y"); and the third letter refers to the season type ("N","A","M", "Z", "X", or "Y"). The letters mean: "N"=none, "A"=additive, "M"=multiplicative, "Z"=automatically selected, "X"=automatically select between none and additive, and "Y"=automatically select between none and multiplicative. A "d" for trend implies damped. "X" and "Y" supported only by type=="es". If used with type=="ets" a warning will be given and they will default to "Z". By default model="ZZZ". If due to sample limitation ETS cannot be calculated at an aggregation level for the selected model, then no estimation is done for that specific level. For aggregation levels that seasonality becomes 1 then a non-seasonal model is estimated.
 #' @param type What type of exponential smoothing implementation to use. "es" = use from the smooth package; "ets" = use from the forecast package. Default is "es"
 #' @param xreg Vector or matrix of exogenous variables to be included in the MAPA. If matrix then rows are observations and columns are variables. Must be at least as long as in-sample. Additional observations are unused. Note that including xreg will force type="es".
 #' @param pr.comp MAPAx can use principal component analysis to preprocess xreg. When comp is -1 then the number of retained components is chosen automatically. When comp=0 then no pre-processing is performed and the original xreg is used. Any other value represents the number of principal components retained.
@@ -31,12 +31,12 @@
 #' \item{ppy, type, model, observations}{Settings used in the estimation.}
 #' \item{xreg.n}{Number of xreg variables.}
 #' \item{pr.comp}{Information for the preprocessing of xreg.}
-#' Earlier versions (<= 2.0.6) stored the fitted models in a list-matrix. Such objects are still accepted by \code{mapacalc}, \code{mapafor} and the methods for \code{mapa.fit}.
+#' Earlier versions (<= 2.0.6) stored the fitted models in a list-matrix. Such objects are still accepted by \code{mapacalc}, \code{mapafor}, and the methods for \code{mapa.fit}.
 #'
 #' @details
 #' MAPA can use two implementations of exponential smoothing at each aggregation level. With \code{type="ets"} the \code{ets} function of the \pkg{forecast} package is used, which supports seasonal periods up to 24. With \code{type="es"} the \code{es} function of the \pkg{smooth} package is used, which supports any seasonal period, the model codes "X" and "Y", and exogenous variables (xreg). Additional arguments are passed to \code{ets} or \code{es} through \code{...}, for example the information criterion used for model selection (\code{ic="bic"} for \code{ets}, or \code{ic="BIC"} for \code{es}).
 #'
-#' MAPAx: exogenous variables are provided with \code{xreg}, as a vector or as a matrix with one column per variable. These are aggregated in the same way as y at each aggregation level. Including xreg forces \code{type="es"}. For estimation xreg must have at least as many observations as y, and any additional observations are ignored. For forecasting, with \code{mapacalc}, \code{mapafor}, \code{mapa} and \code{mapasimple}, xreg must also contain the values for the forecast horizon, so it must have at least length(y) + fh observations. The same xreg variables must be used in estimation and forecasting. When \code{pr.comp} is not 0, xreg is preprocessed with principal components. These are calculated in estimation and stored in the fitted MAPA, so that the same components are used in forecasting.
+#' MAPAx: exogenous variables are provided with \code{xreg}, as a vector or as a matrix with one column per variable. These are aggregated in the same way as y at each aggregation level. Including xreg forces \code{type="es"}. For estimation xreg must have at least as many observations as y, and any additional observations are ignored. For forecasting, with \code{mapacalc}, \code{mapafor}, \code{mapa}, and \code{mapasimple}, xreg must also contain the values for the forecast horizon, so it must have at least length(y) + fh observations. The same xreg variables must be used in estimation and forecasting. When \code{pr.comp} is not 0, xreg is preprocessed with principal components. These are calculated in estimation and stored in the fitted MAPA, so that the same components are used in forecasting.
 #'
 #' Since version 2.1.0 the fitted MAPA is a list, as described in Value. Earlier versions (<= 2.0.6) returned a list-matrix with one row per aggregation level. Code that depends on the earlier structure, for example indexing as \code{mapafit[,"use"]} or \code{mapafit[[1,14]]}, can transform the fitted MAPA to the earlier structure with \code{\link{mapafit.old}}. This is provided only for compatibility and will be removed in a later version of the package. Such code should be updated to use the current structure, for example \code{mapafit$use} or \code{mapafit$models[[1]]$components}.
 #'
@@ -419,7 +419,7 @@ plotmapa <- function(mapafit){
 #'
 #' @param mapafit Fitted MAPA model (from mapaest).
 #'
-#' @return Fitted MAPA model as a list-matrix of class \code{mapa.fit}, with one row per aggregation level, as in MAPA <= 2.0.6. For \code{type="ets"} the columns are the 18 elements of the \code{ets} fit that were stored previously, followed by \code{use}, \code{AL}, \code{original.ppy}, \code{etstype} and \code{pr.comp}. For \code{type="es"} the columns are the elements of the \code{es} fit that were stored previously, followed by \code{smoothLength}, \code{use}, \code{AL}, \code{original.ppy}, \code{etstype} and \code{pr.comp}. The output is still accepted by \code{mapacalc}, \code{mapafor} and the methods of \code{mapa.fit}.
+#' @return Fitted MAPA model as a list-matrix of class \code{mapa.fit}, with one row per aggregation level, as in MAPA <= 2.0.6. For \code{type="ets"} the columns are the 18 elements of the \code{ets} fit that were stored previously, followed by \code{use}, \code{AL}, \code{original.ppy}, \code{etstype}, and \code{pr.comp}. For \code{type="es"} the columns are the elements of the \code{es} fit that were stored previously, followed by \code{smoothLength}, \code{use}, \code{AL}, \code{original.ppy}, \code{etstype}, and \code{pr.comp}. The output is still accepted by \code{mapacalc}, \code{mapafor}, and the methods of \code{mapa.fit}.
 #'
 #' @author Nikolaos Kourentzes, \email{nikolaos@@kourentzes.com}.
 #'
@@ -542,17 +542,17 @@ print.mapa.fit <- function(x,...){
 #-------------------------------------------------
 #' Summaries of MAPA estimation and forecasts
 #'
-#' @description Print and summary methods for the outputs of mapaest, mapacalc, mapasimple, mapafor and mapa.
+#' @description Print and summary methods for the outputs of mapaest, mapacalc, mapasimple, mapafor, and mapa.
 #'
 #' @param object,x Output of mapaest (class \code{mapa.fit}), mapacalc or mapasimple (class \code{mapa.calc}), or mapafor or mapa (class \code{mapa.for}).
 #' @param ... Additional arguments, currently unused.
 #'
 #' @details
-#' The summary of \code{mapa.fit} reports for each aggregation level: the aggregated sample size, the seasonal periods, the fitted model, the smoothing parameters and the number of xreg variables. Levels that could not be estimated due to insufficient sample are marked.
+#' The summary of \code{mapa.fit} reports for each aggregation level: the aggregated sample size, the seasonal periods, the fitted model, the smoothing parameters, and the number of xreg variables. Levels that could not be estimated due to insufficient sample are marked.
 #'
-#' The summary of \code{mapa.calc} reports the combined level, trend, season and xreg components for each horizon, alongside the forecasts.
+#' The summary of \code{mapa.calc} reports the combined level, trend, season, and xreg components for each horizon, alongside the forecasts.
 #'
-#' The summary of \code{mapa.for} reports the in-sample errors (ME, MAE and RMSE) for each in-sample forecast horizon, and the out-of-sample forecasts with any prediction intervals.
+#' The summary of \code{mapa.for} reports the in-sample errors (ME, MAE, and RMSE) for each in-sample forecast horizon, and the out-of-sample forecasts with any prediction intervals.
 #'
 #' The summaries are returned as objects, so their contents can be used directly, for example \code{summary(fit)$table}.
 #'
@@ -672,8 +672,8 @@ print.summary.mapa.fit <- function(x,digits=3,...){
 #'
 #' @param x Fitted MAPA model (from mapaest).
 #' @param xreg.plot Add infromation about xreg in the figure.
-#' @param col Vector of 5 colours for: none, additive, additive damped, multiplicative and multiplicative damped. If NULL the default colours are used.
-#' @param ... Additional arguments passed to \code{image}, for example \code{main}, \code{xlab} and \code{ylab}.
+#' @param col Vector of 5 colours for: none, additive, additive damped, multiplicative, and multiplicative damped. If NULL the default colours are used.
+#' @param ... Additional arguments passed to \code{image}, for example \code{main}, \code{xlab}, and \code{ylab}.
 #'
 #' @references
 #'     \itemize{

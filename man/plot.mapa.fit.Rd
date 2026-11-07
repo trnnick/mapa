@@ -11,9 +11,9 @@
 
 \item{xreg.plot}{Add infromation about xreg in the figure.}
 
-\item{col}{Vector of 5 colours for: none, additive, additive damped, multiplicative and multiplicative damped. If NULL the default colours are used.}
+\item{col}{Vector of 5 colours for: none, additive, additive damped, multiplicative, and multiplicative damped. If NULL the default colours are used.}
 
-\item{...}{Additional arguments passed to \code{image}, for example \code{main}, \code{xlab} and \code{ylab}.}
+\item{...}{Additional arguments passed to \code{image}, for example \code{main}, \code{xlab}, and \code{ylab}.}
 }
 \description{
 The following function plots the fitted components at each aggregation

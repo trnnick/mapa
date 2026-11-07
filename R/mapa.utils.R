@@ -1,4 +1,4 @@
-# Internal helper functions shared across MAPA estimation, forecasting and plotting
+# Internal helper functions shared across MAPA estimation, forecasting, and plotting
 # Nikolaos Kourentzes 2026
 
 #-------------------------------------------------

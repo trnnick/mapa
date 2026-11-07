@@ -23,7 +23,7 @@ mapacalc(
 
 \item{comb}{Combination operator. This can be: "mean"; "median"; "wght" - where each aggregation level is weighted inversly to aggregation; "w.mean" - level and trend components are averaged, but seasonal and xreg follow the wght combination; "w.median" - as w.mean, but with median. It is suggested that for data with high sampling frequency to use one of the "w.mean" and "w.median".}
 
-\item{outplot}{Provide output plot. 0 = no; 1 = time series and forecast only; 2 = time series, forecasts and components. For the components the spectral colouring scheme is used. Red is the lowest aggregation level and blue the highest. Default is 0.}
+\item{outplot}{Provide output plot. 0 = no; 1 = time series and forecast only; 2 = time series, forecasts, and components. For the components the spectral colouring scheme is used. Red is the lowest aggregation level and blue the highest. Default is 0.}
 
 \item{hybrid}{Provide hybrid forecasts, as in Kourentzes et al. paper. If minimumAL > 1 then the minimumAL ETS forecasts are used. Default is TRUE.}
 
@@ -33,7 +33,7 @@ mapacalc(
 \item{forecast}{Vector with forecasts. If y is a ts object, then this is also a ts object.}
 \item{components}{Array with MAPA components.}
 \item{combined}{Combined components across aggregation levels.}
-The output is of class \code{mapa.calc}, which also stores the time series and the settings used. It has \code{print}, \code{summary} and \code{plot} methods, see \code{\link{plot.mapa.calc}}.
+The output is of class \code{mapa.calc}, which also stores the time series and the settings used. It has \code{print}, \code{summary}, and \code{plot} methods, see \code{\link{plot.mapa.calc}}.
 }
 \description{
 The following function produces a simple MAPA forecast from a given origin.

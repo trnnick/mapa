@@ -47,7 +47,7 @@ mapafor(
 \item{PI}{Prediction intervals for given confidence levels.}
 \item{MSE}{In-sample MSE error.}
 \item{MAE}{In-sample MAE error.}
-If y is a ts object, then outfor is also a ts object. The output is of class \code{mapa.for}, which also stores the time series and the settings used. It has \code{print}, \code{summary} and \code{plot} methods, see \code{\link{plot.mapa.for}}. The summary reports in-sample errors for each horizon.
+If y is a ts object, then outfor is also a ts object. The output is of class \code{mapa.for}, which also stores the time series and the settings used. It has \code{print}, \code{summary}, and \code{plot} methods, see \code{\link{plot.mapa.for}}. The summary reports in-sample errors for each horizon.
 }
 \description{
 The following function produces in- and out-of-sample MAPA forecasts, for multiple steps ahead.

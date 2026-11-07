@@ -26,7 +26,7 @@
 #' }
 #'
 #' @section Methods for MAPA outputs:
-#' The outputs of the functions above have the classes \code{mapa.fit} (\code{mapaest}), \code{mapa.calc} (\code{mapacalc} and \code{mapasimple}) and \code{mapa.for} (\code{mapafor} and \code{mapa}), with the following methods.
+#' The outputs of the functions above have the classes \code{mapa.fit} (\code{mapaest}), \code{mapa.calc} (\code{mapacalc} and \code{mapasimple}), and \code{mapa.for} (\code{mapafor} and \code{mapa}), with the following methods.
 #' \describe{
 #'   \item{\code{\link{plot.mapa.fit}}}{Plot the components of the model fitted at each aggregation level.}
 #'   \item{\code{\link{plot.mapa.calc}}}{Plot the forecasts and, optionally, the forecasted components at each aggregation level.}

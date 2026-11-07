@@ -10,7 +10,7 @@ mapafit.old(mapafit)
 \item{mapafit}{Fitted MAPA model (from mapaest).}
 }
 \value{
-Fitted MAPA model as a list-matrix of class \code{mapa.fit}, with one row per aggregation level, as in MAPA <= 2.0.6. For \code{type="ets"} the columns are the 18 elements of the \code{ets} fit that were stored previously, followed by \code{use}, \code{AL}, \code{original.ppy}, \code{etstype} and \code{pr.comp}. For \code{type="es"} the columns are the elements of the \code{es} fit that were stored previously, followed by \code{smoothLength}, \code{use}, \code{AL}, \code{original.ppy}, \code{etstype} and \code{pr.comp}. The output is still accepted by \code{mapacalc}, \code{mapafor} and the methods of \code{mapa.fit}.
+Fitted MAPA model as a list-matrix of class \code{mapa.fit}, with one row per aggregation level, as in MAPA <= 2.0.6. For \code{type="ets"} the columns are the 18 elements of the \code{ets} fit that were stored previously, followed by \code{use}, \code{AL}, \code{original.ppy}, \code{etstype}, and \code{pr.comp}. For \code{type="es"} the columns are the elements of the \code{es} fit that were stored previously, followed by \code{smoothLength}, \code{use}, \code{AL}, \code{original.ppy}, \code{etstype}, and \code{pr.comp}. The output is still accepted by \code{mapacalc}, \code{mapafor}, and the methods of \code{mapa.fit}.
 }
 \description{
 Since version 2.1.0 the fitted MAPA model returned by \code{mapaest} is a list that keeps the complete fitted model at each aggregation level. Earlier versions (<= 2.0.6) stored it as a list-matrix, with one row per aggregation level. This function transforms the current structure to the earlier one, so that code that depends on the old indexing of the fitted MAPA keeps working.
