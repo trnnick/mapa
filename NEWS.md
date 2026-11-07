@@ -18,16 +18,16 @@
 - Expanded documentation and examples, covering the use of xreg and principal components, the use of ets (forecast) and es (smooth), and the other arguments.
 - tsaggr now uses colours from Rcolorbrewer as the rest of the package does. 
 - The default prediction interval shading in plot.mapa.for now follows the forecast colour.
-- buggfix: mapaest: MAPAx (type="es" with xreg) failed whenever an aggregation level could not be estimated due to sample size, which is common when xreg is used.
-- buggfix: mapacalc, mapafor: failed when the lowest requested aggregation level could not be estimated. Only the estimated aggregation levels are now used, with the correct weights.
-- buggfix: mapacalc: with pr.comp != 0 the principal components were calculated again at forecast time, giving components that did not match the ones used in estimation. The rotation from estimation is now stored and reused. This changes MAPAx forecasts that use pr.comp.
-- buggfix: mapacalc: the aggregation of future xreg values did not include the start offset, so the last aggregated future period used fewer observations than needed. This changes MAPAx forecasts at longer horizons for some aggregation levels.
-- buggfix: print.mapa.fit: printed the position of the aggregation level instead of its value when minimumAL > 1, and failed when some levels were not estimated.
-- buggfix: plot.mapa.fit: the grey shading for levels without seasonality was misplaced when minimumAL > 1.
-- buggfix: Component plot: the combined level and trend shown for comb="w.mean" and "w.median" was the weighted one, instead of the mean or median used for the forecasts.
-- buggfix: print.mapa.for: garbled output when ifh > 1.
-- buggfix: mapafor: failed when fh=0 and conf.lvl was given.
-- buggfix: Plot limits were not symmetric in mapafor and tsaggr.
+- bugfix: mapaest: MAPAx (type="es" with xreg) failed whenever an aggregation level could not be estimated due to sample size, which is common when xreg is used.
+- bugfix: mapacalc, mapafor: failed when the lowest requested aggregation level could not be estimated. Only the estimated aggregation levels are now used, with the correct weights.
+- bugfix: mapacalc: with pr.comp != 0 the principal components were calculated again at forecast time, giving components that did not match the ones used in estimation. The rotation from estimation is now stored and reused. This changes MAPAx forecasts that use pr.comp.
+- bugfix: mapacalc: the aggregation of future xreg values did not include the start offset, so the last aggregated future period used fewer observations than needed. This changes MAPAx forecasts at longer horizons for some aggregation levels.
+- bugfix: print.mapa.fit: printed the position of the aggregation level instead of its value when minimumAL > 1, and failed when some levels were not estimated.
+- bugfix: plot.mapa.fit: the grey shading for levels without seasonality was misplaced when minimumAL > 1.
+- bugfix: Component plot: the combined level and trend shown for comb="w.mean" and "w.median" was the weighted one, instead of the mean or median used for the forecasts.
+- bugfix: print.mapa.for: garbled output when ifh > 1.
+- bugfix: mapafor: failed when fh=0 and conf.lvl was given.
+- bugfix: Plot limits were not symmetric in mapafor and tsaggr.
 
 # CHANGES IN MAPA VERSION 2.0.6 (12 NOV 2023)
 - Fixed smooth related dependencies.
