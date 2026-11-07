@@ -366,9 +366,6 @@ print.summary.mapa.calc <- function(x,digits=max(3,getOption("digits")-3),...){
     tbl <- tbl[,colnames(tbl)!="Xreg",drop=FALSE]
   }
   print(round(tbl,digits))
-  if (x$hybrid){
-    cat("Hybrid forecasts are the average of the combined components and the lowest aggregation level ETS forecasts.\n")
-  }
   
   return(invisible(x))
   
