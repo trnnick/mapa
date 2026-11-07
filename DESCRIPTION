@@ -1,13 +1,20 @@
 Package: MAPA
 Type: Package
 Title: Multiple Aggregation Prediction Algorithm
-Version: 2.0.6
+Version: 2.1.0
 Authors@R: c(person("Nikolaos", "Kourentzes", email = "nikolaos@kourentzes.com",
                     role = c("aut", "cre")),
              person("Fotios", "Petropoulos", role = c("aut"))) 
 Description: Functions and wrappers for using the Multiple Aggregation Prediction Algorithm (MAPA) for time series forecasting. MAPA models and forecasts time series at multiple temporal aggregation levels, thus strengthening and attenuating the various time series components for better holistic estimation of its structure. For details see Kourentzes et al. (2014) <doi:10.1016/j.ijforecast.2013.09.006>.
 LazyData: yes
 License: GPL (>= 2)
-Depends: forecast (>= 5.3), parallel, RColorBrewer, smooth (>= 4.0.0)
+Depends: R (>= 4.1.0)
+Imports: forecast (>= 5.3), parallel, RColorBrewer, smooth (>= 4.0.0), greybox,
+    grDevices, graphics, stats, utils
+Suggests: testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Encoding: UTF-8
+Roxygen: list(markdown = FALSE)
 URL: https://kourentzes.com/forecasting/2014/04/19/multiple-aggregation-prediction-algorithm-mapa/
 BugReports: https://github.com/trnnick/mapa/issues
+Config/roxygen2/version: 8.1.1

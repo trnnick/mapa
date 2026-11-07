@@ -1,3 +1,34 @@
+# CHANGES IN MAPA VERSION 2.1.0 (07 NOV 2026)
+- new: New plot methods for mapa.calc and mapa.for. Plots accept user arguments, such as main, xlab, ylab, xlim, ylim, col and lwd, use the time index of ts inputs, and respect the user's graphical layout.
+- new: plot.mapa.calc can plot all or selected components.
+- new: New summary methods for mapa.fit (model, parameters and AICc at each aggregation level), mapa.calc (combined components for each horizon) and mapa.for (in-sample ME, MAE, MSE, RMSE and MAPE for each horizon).
+- new; Forecasts of ts inputs are returned as ts objects.
+- new: mapaest, mapa, mapasimple, mapafor: new input cl, to provide an existing cluster for parallel processing.
+- new: mapafor and mapa: parallel processing is also used for the in-sample forecasts. mapa initialises a single cluster for estimation and forecasting.
+- new: tsaggr: additional arguments are passed to plot.
+- new: New function mapafit.old, to transform the output of mapaest to the structure of earlier versions. This is provided for compatibility and will be removed in a later version.
+- new: Added tests.
+- mapaest: the fitted MAPA is now a list that keeps the complete fitted model at each aggregation level, instead of a list-matrix. This makes MAPA robust to changes in the forecast and smooth packages. Code that indexes the fitted MAPA directly needs to be updated, or can use mapafit.old in the meantime. Fitted MAPA objects from earlier versions are still accepted.
+- The default forecast horizon is now fh=NULL in all functions, which gives a full season. In mapafor and mapa fh=0 still gives only in-sample forecasts. The earlier defaults (fh=-1 in mapafor and fh=0 in mapacalc) are still accepted.
+- forecast, smooth and RColorBrewer are now imported instead of attached. Code that relied on library(MAPA) to attach the forecast package needs to load it separately. Requires R >= 4.1.0.
+- Prediction intervals are printed in order, from the lowest to the highest bound.
+- Invalid options give informative errors.
+- Internal code simplified, with repeated calculations moved to helper functions.
+- Documentation and NAMESPACE are now generated with roxygen2 from the R files. Added package level help page (?MAPA).
+- Expanded documentation and examples, covering the use of xreg and principal components, the use of ets (forecast) and es (smooth), and the other arguments.
+- tsaggr now uses colours from Rcolorbrewer as the rest of the package does. 
+- The default prediction interval shading in plot.mapa.for now follows the forecast colour.
+- buggfix: mapaest: MAPAx (type="es" with xreg) failed whenever an aggregation level could not be estimated due to sample size, which is common when xreg is used.
+- buggfix: mapacalc, mapafor: failed when the lowest requested aggregation level could not be estimated. Only the estimated aggregation levels are now used, with the correct weights.
+- buggfix: mapacalc: with pr.comp != 0 the principal components were calculated again at forecast time, giving components that did not match the ones used in estimation. The rotation from estimation is now stored and reused. This changes MAPAx forecasts that use pr.comp.
+- buggfix: mapacalc: the aggregation of future xreg values did not include the start offset, so the last aggregated future period used fewer observations than needed. This changes MAPAx forecasts at longer horizons for some aggregation levels.
+- buggfix: print.mapa.fit: printed the position of the aggregation level instead of its value when minimumAL > 1, and failed when some levels were not estimated.
+- buggfix: plot.mapa.fit: the grey shading for levels without seasonality was misplaced when minimumAL > 1.
+- buggfix: Component plot: the combined level and trend shown for comb="w.mean" and "w.median" was the weighted one, instead of the mean or median used for the forecasts.
+- buggfix: print.mapa.for: garbled output when ifh > 1.
+- buggfix: mapafor: failed when fh=0 and conf.lvl was given.
+- buggfix: Plot limits were not symmetric in mapafor and tsaggr.
+
 # CHANGES IN MAPA VERSION 2.0.6 (12 NOV 2023)
 - Fixed smooth related dependencies.
 

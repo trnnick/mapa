@@ -1,4 +1,6 @@
-year <- sub("-.*", "", meta$Date)
+# Year of the package version. Date is not set in DESCRIPTION, so use the 
+# publication date on CRAN, or the date the package was built for other installations.
+year <- sub("-.*", "", c(meta$Date, meta$`Date/Publication`, sub(";.*", "", meta$Packaged))[1])
 note <- sprintf("R package version %s", meta$Version)
 
 bibentry(bibtype = "Manual",
@@ -17,7 +19,7 @@ bibentry(bibtype = "Article",
          journal={"International Journal of Forecasting"},
          volume={30},
          number={2},
-         pages={291--302},
+         pages="291--302",
          year={2014},
          publisher={"Elsevier"}
          )
@@ -28,7 +30,7 @@ bibentry(bibtype = "Article",
                     person("Fotios", "Petropoulos")),
          journal={"International Journal of Production Economics"},
          volume={181},
-         pages={145--153},
+         pages="145--153",
          year={2016},
          publisher={"Elsevier"}
          )

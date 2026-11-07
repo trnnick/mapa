@@ -1,444 +1,312 @@
-# Nikolaos Kourentzes & Fotios Petropoulos (2014)
-# Now split into multiple files (mapa.R, mapa.estim.R, mapa.forecast.R)
+# Now split into multiple files (mapa.R, mapa.estim.R, mapa.forecast.R, mapa.utils.R)
 
 #-------------------------------------------------
-mapa <- function(y, ppy=NULL, fh=ppy, ifh=1, minimumAL=1, maximumAL=ppy, 
+#' Multiple Aggregation Prediction Algorithm (Wrapper)
+#'
+#' @description
+#' Wrapper to estimate and produce MAPA in- and out-of-sample forecasts.
+#' Uses mapaest and mapafor.
+#'
+#' @param y In sample observations of a time series (vector). If y == "paper" then it prints paper reference.
+#' @param ppy Periods in a season of the time series at the sampled frequency.
+#'   If insample is a ts object then this is taken from its frequency, unless overriden.
+#' @param fh Forecast horizon. Default = ppy. If fh = 0 then only in-sample forecasts are produced.
+#' @param ifh In-sample forecast horizon. Default = 1.
+#' @param minimumAL Lowest aggregation level to use. Default = 1.
+#' @param maximumAL Highest aggregation level to use. Default = ppy, maximumAL>1.
+#' @param comb Combination operator. This can be: "mean"; "median"; "wght" - where each aggregation level is weighted inversly to aggregation; "w.mean" - level and trend components are averaged, but seasonal and xreg follow the wght combination; "w.median" - as w.mean, but with median. It is suggested that for data with high sampling frequency to use one of the "w.mean" and "w.median".
+#' @param paral Use parallel processing. 0 = no; 1 = yes (requires initialised cluster); 2 = yes and initialise cluster. Default is 0. Parallel processing is used for both the estimation and the in-sample forecasts.
+#' @param display Display calculation progress in console. 0 = no; 1 = yes. Default is 0.
+#' @param outplot Provide output plot. 0 = no; 1 = yes. Default is 0.
+#' @param hybrid Provide hybrid forecasts, as in Kourentzes et al. paper. If minimumAL > 1 then the minimumAL ETS forecasts are used. Default is TRUE.
+#' @param model Allow only that type of ETS at each aggregation level. This follows similar coding to the ets function. The first letter refers to the error type ("A", "M" or "Z"); the second letter refers to the trend type ("N","A","Ad","M","Md", "Z", "X" or "Y"); and the third letter refers to the season type ("N","A","M", "Z", "X" or "Y"). The letters mean: "N"=none, "A"=additive, "M"=multiplicative, "Z"=automatically selected, "X"=automatically select between none and additive and "Y"=automatically select between none and multiplicative. A "d" for trend implies damped. "X" and "Y" supported only by type=="es". If used with type=="ets" a warning will be given and they will default to "Z". By default model="ZZZ". If due to sample limitation ETS cannot be calculated at an aggregation level for the selected model, then no estimation is done for that specific level.
+#' @param type What type of exponential smoothing implementation to use. "es" = use from the smooth package; "ets" = use from the forecast package. Default is "es"
+#' @param conf.lvl Vector of confidence level for prediction intervals. Values must be (0,1). If conf.lvl == NULL then no intervals are calculated. For example to get the intervals for 80\% and 95\% use conf.lvl=c(0.8,0.95).
+#' @param xreg Vector or matrix of exogenous variables to be included in the MAPA. If matrix then rows are observations and columns are variables. Must be at least as long as in-sample. Additional observations are unused. Note that including xreg will force type="es".
+#' @param pr.comp MAPAx can use principal component analysis to preprocess xreg. When comp is -1 then the number of retained components is chosen automatically. When comp=0 then no pre-processing is performed and the original xreg is used. Any other value represents the number of principal components retained.
+#' @param cl Cluster to use when paral=1, created with \code{parallel::makeCluster}. If NULL, a cluster named \code{cl} in the global environment is used, for compatibility with earlier versions.
+#' @param ... Pass additional arguments to es or ets.
+#'
+#' @return
+#' \item{infor}{In-sample forecasts.}
+#' \item{outfor}{Out-of-sample forecasts.}
+#' \item{PI}{Prediction intervals for given confidence levels.}
+#' \item{MSE}{In-sample MSE error.}
+#' \item{MAE}{In-sample MAE error.}
+#' The output is of class \code{mapa.for}, which also stores the time series and the settings used. See \code{\link{mapafor}} and \code{\link{plot.mapa.for}}.
+#'
+#' @details This function calls \emph{mapaest} and \emph{mapafor} internally.
+#'
+#' Use \code{type="es"} for the \code{es} function of the \pkg{smooth} package, instead of the default \code{ets} function of the \pkg{forecast} package. See \code{\link{mapaest}} for details on the differences between the two and on the use of xreg.
+#'
+#' @note The calculation of the prediction intervals is based on the empirical multiple step ahead MSE. To speed up calculations set \code{conf.lvl=NULL}. If very long forecast horizons are requested then once no more t+h MSE can be calculated the following approximation is used: \eqn{\sqrt{MSE_{t+1}}*\sqrt{h}}{sqrt(MSE_[t+1])*sqrt(h)} for the error.
+#'
+#' @references
+#'     \itemize{
+#'         \item{Kourentzes N., Petropoulos F., Trapero J.R. (2014) Improving forecasting by estimating time
+#' series structural components across multiple frequencies. \emph{International Journal of Forecasting}, \bold{30}(\bold{2}), 291--302.}
+#'         \item{Kourentzes N., Petropoulos F. (2015) Forecasting with multivariate temporal aggregation: The case of promotional modelling. \emph{International Journal of Production Economics}.}
+#'         \item{You can find more information about MAPA at Nikos' \href{https://kourentzes.com/forecasting/tag/mapa/}{blog}.}
+#' }
+#'
+#' @author Nikolaos Kourentzes, \email{nikolaos@@kourentzes.com}; Fotios Petropoulos.
+#'
+#' @seealso \code{\link{mapaest}}, \code{\link{mapafor}}, \code{\link{mapasimple}}.
+#'
+#' @keywords ~mapaest ~mapafor ~mapasimple
+#' @examples
+#' # MAPA with ets from the forecast package (default), forecasting 18 steps 
+#' # ahead, with in-sample forecasts up to 3 steps ahead and prediction intervals
+#' out <- mapa(admissions, fh=18, ifh=3, conf.lvl=c(0.8,0.95))
+#' print(out)
+#' summary(out)
+#' plot(out)
+#'
+#' # MAPAx with es from the smooth package. xreg must contain the in-sample 
+#' # observations and the fh future values
+#' set.seed(1)
+#' fh <- 12
+#' x <- matrix(rnorm((length(admissions)+fh)*2), ncol=2)
+#' out <- mapa(admissions, fh=fh, type="es", xreg=x)
+#'
+#' \donttest{
+#' # es with a different combination operator and without hybrid forecasts
+#' out <- mapa(admissions, type="es", comb="median", hybrid=FALSE)
+#'
+#' # Non-seasonal models only, at aggregation levels 1 to 6
+#' out <- mapa(admissions, model="ZZN", maximumAL=6)
+#'
+#' # MAPAx with xreg preprocessed by principal components, selecting the number
+#' # of components automatically, and plotting the output
+#' out <- mapa(admissions, fh=fh, type="es", xreg=x, pr.comp=-1, conf.lvl=0.9, outplot=1)
+#'
+#' # Only in-sample forecasts
+#' out <- mapa(admissions, fh=0, ifh=6)
+#' }
+#' @export
+mapa <- function(y, ppy=NULL, fh=NULL, ifh=1, minimumAL=1, maximumAL=ppy, 
 	comb=c("w.mean","w.median","mean","median","wght"), paral=c(0,1,2), display=c(0,1), outplot=c(0,1), 
 	hybrid=c(TRUE,FALSE), model="ZZZ", type=c("ets","es"), conf.lvl=NULL, 
-	xreg=NULL, pr.comp=0, ...){
-# Wrapper to estimate and produce MAPA in- and out-of-sample forecasts
-# Uses mapaest and mapafor
-#  
-# Inputs:
-#   y           = In sample observations of a time series (vector)
-#                 If y == "paper" then it prints paper reference
-#   ppy         = Periods in a season of the time series at the sampled frequency.
-#                 If y is a ts object then this is taken from its frequency,
-#                 unless overriden. 
-#   fh          = Forecast horizon. Default = ppy
-#   ifh         = In-sample forecast horizon. Default = 1
-#   minimumAL   = Lowest aggregation level to use. Default = 1
-#   maximumAL   = Highest aggregation level to use. Default = ppy, maximumAL>1
-#   comb        = Combination operator. This can be: "mean"; "median"; "wght" - where each 
-#                 aggregation level is weighted inversly to aggregation; "w.mean" - level 
-#                 and trend components are averaged, but seasonal and xreg follow the wght 
-#                 combination; "w.median" - as w.mean, but with median. It is suggested that 
-#                 for data with high sampling frequency to use one of the "w.mean" and "w.median".
-#   paral       = Use parallel processing. 0 = no; 1 = yes (requires initialised cluster); 
-#                 2 = yes and initialise cluster. Default is 0.
-#   display     = Display calculation progress in console. 0 = no; 1 = yes. Default is 0.
-#   outplot     = Provide output plot. 0 = no; 1 = yes. Default is 1.
-#   hybrid      = Provide hybrid forecasts, as in Kourentzes et al. paper. Default is TRUE
-#                 If minimumAL > 1 then the minimumAL ETS forecasts are used.  
-#   model       = Allow only that type of ETS at each aggregation level. This follows similar
-#                 coding to the ets function. The first letter refers to the error 
-#                 type ("A", "M" or "Z"); the second letter refers to the trend 
-#                 type ("N","A","Ad","M","Md", "Z", "X" or "Y"); and the third letter 
-#                 refers to the season type ("N","A","M", "Z", "X" or "Y"). The letters mean: 
-#                 "N"=none, "A"=additive, "M"=multiplicative, "Z"=automatically selected, 
-#                 "X"=automatically select between none and additive and "Y"=automatically
-#                 select between none and multiplicative. "X" and "Y" supported only by 
-#                 type=="es". If used with type=="ets" a warning will be given and they will 
-#                 default to "Z".  A "d" for trend implies damped. 
-#                 By default model="ZZZ". If due to sample limitation ETS cannot be calculated 
-#                 at an aggregation level for the selected model, then no estimation is done 
-#                 for that specific level. For aggregation levels that seasonality becomes 
-#                 1 then a non-seasonal model is estimated.
-#   type        = What type of exponential smoothing implementation to use. "es" - use from 
-#                 the smooth package; "ets" use from the forecast package.
-#   conf.lvl    = Vector of confidence level for prediction intervals. Values must be (0,1). 
-#                 If conf.lvl == NULL then no intervals are calculated. For example to get 
-#                 the intervals for 80% and 95% use conf.lvl=c(0.8,0.95).
-#   xreg        = Vector or matrix of exogenous variables to be included in the MAPA. 
-#                 If matrix then rows are observations and columns are variables. 
-#                 Must be at least as long as in-sample. Additional observations are unused.
-#                 Note that including xreg will force type="es". 
-#   pr.comp     = MAPAx can use principal component analysis to preprocess xreg. When comp is -1 
-#                 then the number of retained components is chosen automatically. When comp=0 
-#                 then no pre-processing is performed and the original xreg is used. Any other 
-#                 value represents the number of principal components retained. 
-#   ...         = Pass additional arguments to es and ets.
-#
-# Output:
-#   out$infor   = In-sample forecasts
-#   out$outfor  = Out-of-sample forecasts
-#   out$PI      = Prediction intervals for given confidence levels
-#   out$MSE     = In-sample MSE error
-#   out$MAE     = In-sample MAE error
+	xreg=NULL, pr.comp=0, cl=NULL, ...){
+  # Paper info
+  if (!is.numeric(y)){
+    return(mapa.paper())
+  }
   
   # Defaults
   comb <- match.arg(comb,c("w.mean","w.median","mean","median","wght"))
-  paral <- paral[1]
-  display <- display[1]
-  outplot <- outplot[1]
-  hybrid <- hybrid[1]
-  type <- type[1]
+  paral <- mapa.choice(paral,c(0,1,2),"paral")
+  display <- mapa.choice(display,c(0,1),"display")
+  outplot <- mapa.choice(outplot,c(0,1),"outplot")
+  hybrid <- mapa.choice(hybrid,c(TRUE,FALSE),"hybrid")
+  type <- match.arg(type,c("ets","es"))
   
-  # Paper info
-  if (!is.numeric(y)){
-    writeLines("Paper reference: ")
-    writeLines("Kourentzes N., Petropoulos F. and Trapero J.R. (2014)")
-    writeLines("Improving forecasting by estimating time series structural components")
-    writeLines(paste("across multiple frequencies. International Journal of Forecasting,", 
-                     " 30 (2), 291-302.",sep=""))
-    return(invisible())
+  # Setup parallel processing if required
+  # A single cluster is used for both estimation and forecasting
+  if (paral == 2){
+    clout <- mapa.cluster(paral,cl)
+    cl <- clout$cl
+    paral <- 1
+    on.exit(stopCluster(cl))
   }
   
   # Estimate MAPA
   mapafit <- mapaest(y=y, ppy=ppy, minimumAL=minimumAL, 
                      maximumAL=maximumAL, paral=paral, display=display, 
-                     outplot=outplot, model=model, type=type, xreg=xreg, pr.comp=pr.comp, ...)
+                     outplot=outplot, model=model, type=type, xreg=xreg, pr.comp=pr.comp, 
+                     cl=cl, ...)
   
   # If not horizon was given forecasts a full season
-  if (is.null(fh)){
-    idx.ppy <- which(colnames(mapafit)=="original.ppy")
-    fh <- as.numeric(mapafit[1,idx.ppy])
-  }
+  # This is handled by mapafor, when fh=NULL
   
   # Produce in- and out-of-sample forecasts
   out <- mapafor(y=y, mapafit=mapafit, fh=fh, ifh=ifh, comb=comb, 
-                 outplot=outplot, hybrid=hybrid, conf.lvl=conf.lvl, xreg=xreg)
+                 outplot=outplot, hybrid=hybrid, conf.lvl=conf.lvl, xreg=xreg,
+                 paral=paral, cl=cl)
   
   return(out)
   
 }
 
 #-------------------------------------------------
-mapacomb <- function(minimumAL,maximumAL,ppy,FCs,comb){
+mapacomb <- function(ALs,ppy,FCs,comb){
 # This function combines the translated ets states
+#
+# Inputs:
+#   ALs         = Aggregation levels that are combined. These correspond to the rows of FCs.
+#   ppy         = Periods in a season at the original sampling frequency.
+#   FCs         = Array of translated forecasts (aggregation levels x components x horizon).
+#   comb        = Combination operator.
+#
+# Output:
+#   forecasts   = Combined forecasts.
+#   combined    = Combined components (components x horizon).
+#   perm_seas   = Aggregation levels for which seasonality is permitted.
   
   # perm_levels is not needed for forecasting. This is already checked in the estimation.
+  # Aggregation levels that were not estimated are not in FCs.
   # perm_levels <- array(0, maximumAL) # permitted levels due to ETS implementation (observations>=4)
-  perm_seas <- array(0, maximumAL)   # permitted seasonalities
-  for (AL in minimumAL:maximumAL){
-    # if (observations %/% AL >=4){
-    #   perm_levels[AL] <- 1
-    # }
-    if ((ppy %% AL == 0) & (AL<ppy)){
-      perm_seas[AL] <- 1
-    }
-  }
+  # if (observations %/% AL >=4){
+  #   perm_levels[AL] <- 1
+  # }
   # perm_levels <- perm_levels[minimumAL:maximumAL]
-  perm_levels <- rep(1,(maximumAL-minimumAL+1))
-  perm_seas <- perm_seas[minimumAL:maximumAL]
+  perm_seas <- (ppy %% ALs == 0) & (ALs<ppy)   # permitted seasonalities
+  fh <- dim(FCs)[3]
   
-  if (dim(FCs)[3] != 1){ # Forecast multiple steps ahead
-    level <- FCs[perm_levels==1, 2, ]
-    trend <- FCs[perm_levels==1, 3, ]
-    season <- FCs[(perm_levels==1 & perm_seas==1), 4, ]
-    xreg <- FCs[perm_levels==1, 5, ]
+  # Combination operator for level, trend, season and xreg
+  operator <- switch(comb,
+                     "mean"=rep("mean",4), # alternative averaging operators
+                     "median"=rep("median",4),
+                     "wght"=rep("wght",4), # Weighted sum
+                     "w.mean"=c("mean","mean","wght","wght"),
+                     "w.median"=c("median","median","wght","wght"))
+  
+  # Combine each component
+  # Forecast multiple steps ahead, or a single step ahead, with the same calculations
+  # Seasonality is combined only across the levels that it is permitted
+  cmp.names <- c("Level","Trend","Season","Xreg")
+  combined <- array(0,c(4,fh),dimnames=list(cmp.names,dimnames(FCs)[[3]]))
+  for (k in 1:4){
+    if (cmp.names[k] == "Season"){
+      idx <- perm_seas
+    } else {
+      idx <- rep(TRUE,length(ALs))
+    }
     # Check that all are arrays
-    if (!is.array(level)){
-      level <- array(level,c(1,length(level)))
-    }
-    if (!is.array(trend)){
-      trend <- array(trend,c(1,length(trend)))
-    }
-    if (!is.array(season)){
-      season <- array(season,c(1,length(season)))
-    }
-    if (!is.array(xreg)){
-      xreg <- array(xreg,c(1,length(xreg)))
-    }
-    if (comb=="mean"){ # alternative averaging operators
-      forecasts <- colSums(rbind(colMeans(level),colMeans(trend),
-                                 colMeans(season),colMeans(xreg)),na.rm=TRUE) # MAPA(mean) forecasts
-    } else if (comb=="median"){
-      # forecasts <- colSums(rbind(colMedians(level),colMedians(trend),
-      #                            colMedians(season)),na.rm=TRUE) # MAPA(median) forecasts
-      forecasts <- colSums(rbind(apply(level,2,"median"),apply(trend,2,"median"),
-                                 apply(season,2,"median"),apply(xreg,2,"median")),na.rm=TRUE) # MAPA(median) forecasts
-    } else if (comb=="wght"){
-      # Weighted sum
-      wghts <- 1/(minimumAL:maximumAL)
-      wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
-      wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
-      fh <- dim(level)[2]
-      wghts.level <- matrix(rep(wghts.level,fh),ncol=fh)
-      wghts.season <- matrix(rep(wghts.season,fh),ncol=fh)
-      forecasts <- colSums(rbind(colSums(level * wghts.level),colSums(trend * wghts.level),
-                                 colSums(season * wghts.season),colSums(xreg * wghts.level)),na.rm=TRUE)
-    } else if (comb=="w.mean"){
-      wghts <- 1/(minimumAL:maximumAL)
-      wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
-      wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
-      fh <- dim(level)[2]
-      wghts.season <- matrix(rep(wghts.season,fh),ncol=fh)
-      forecasts <- colSums(rbind(colMeans(level),colMeans(trend),
-                                 colSums(season * wghts.season),colSums(xreg * wghts.level)),na.rm=TRUE)
-    } else if (comb=="w.median"){
-      wghts <- 1/(minimumAL:maximumAL)
-      wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
-      wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
-      fh <- dim(level)[2]
-      wghts.season <- matrix(rep(wghts.season,fh),ncol=fh)
-      forecasts <- colSums(rbind(apply(level,2,"median"),apply(trend,2,"median"),
-                                 colSums(season * wghts.season),colSums(xreg * wghts.level)),na.rm=TRUE)
-    }
-  } else {
-    if (comb=="mean"){ # alternative averaging operators
-      forecasts <- colSums(rbind(mean(FCs[perm_levels==1, 2, ]),mean(FCs[perm_levels==1, 3, ]),
-		    mean(FCs[(perm_levels==1 & perm_seas==1), 4, ]),mean(FCs[perm_levels==1, 5, ])), na.rm=TRUE) # MAPA(mean) forecasts
-    } else if (comb=="median"){
-      forecasts <- colSums(rbind(median(FCs[perm_levels==1, 2, ]),median(FCs[perm_levels==1, 3, ]),
-		    median(FCs[(perm_levels==1 & perm_seas==1), 4, ]),median(FCs[perm_levels==1, 5, ])), na.rm=TRUE) # MAPA(median) forecasts
-    } else if (comb=="wght"){
-      # Weighted sum
-      wghts <- 1/(minimumAL:maximumAL)
-      wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
-      wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
-      forecasts <- sum(c(sum(FCs[perm_levels==1, 2, ]*wghts.level), sum(FCs[perm_levels==1, 3, ]*wghts.level),
-                         sum(FCs[(perm_levels==1 & perm_seas==1), 4, ]*wghts.season),
-                         sum(FCs[perm_levels==1, 5, ]*wghts.level)),na.rm=TRUE)
-    } else if (comb=="w.mean"){
-      wghts <- 1/(minimumAL:maximumAL)
-      wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
-      wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
-      forecasts <- sum(c(mean(FCs[perm_levels==1, 2, ]),mean(FCs[perm_levels==1, 3, ]),
-                         sum(FCs[(perm_levels==1 & perm_seas==1), 4, ]*wghts.season),
-                         sum(FCs[perm_levels==1, 5, ]*wghts.level)),na.rm=TRUE)
-    } else if (comb=="w.median"){
-      wghts <- 1/(minimumAL:maximumAL)
-      wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
-      wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
-      forecasts <- sum(c(median(FCs[perm_levels==1, 2, ]),median(FCs[perm_levels==1, 3, ]),
-                         sum(FCs[(perm_levels==1 & perm_seas==1), 4, ]*wghts.season),
-                         sum(FCs[perm_levels==1, 5, ]*wghts.level)),na.rm=TRUE)
-    }
+    X <- matrix(FCs[idx, k+1, ],nrow=sum(idx),ncol=fh)
+    combined[k,] <- mapacomb.comp(X,ALs[idx],operator[k])
   }
+  
+  # MAPA forecasts
+  forecasts <- colSums(combined,na.rm=TRUE)
   
   # Return output
-  return(list(forecasts=forecasts,perm_levels=perm_levels,perm_seas=perm_seas))
+  return(list(forecasts=forecasts,combined=combined,perm_seas=perm_seas))
 }
 
 #-------------------------------------------------
-mapaplot <- function(outplot,FCs,minimumAL,maximumAL,perm_levels,perm_seas,
-                     observations,y,forecasts,fh,comb){
-# Produce MAPA forecast & components plot 
-# outplot == 0, no plot; == 1 series plot; == 2 component plot  
-
-  if (outplot > 0){
-    FClevel <- FCs[perm_levels==1, 2, ]
-    FCtrend <- FCs[perm_levels==1, 3, ]
-    if (sum(perm_levels==1 & perm_seas==1)!=0){
-      FCseason <- FCs[(perm_levels==1 & perm_seas==1), 4, ]
-    } else {
-      FCseason <- NULL
-    }
-    FCxreg <- FCs[perm_levels==1, 5, ]
-    if (all(FCxreg == 0)){
-      FCxreg <- NULL
-    }
-
-    # Check that all are arrays
-    if (!is.array(FClevel)){
-      FClevel <- array(FClevel,c(length(FClevel)/fh,fh))
-    }
-    if (!is.array(FCtrend)){
-      FCtrend <- array(FCtrend,c(length(FCtrend)/fh,fh))
-    }
-    if (!is.array(FCseason) && !is.null(FCseason)){
-      FCseason <- array(FCseason,c(length(FCseason)/fh,fh))
-    }
-    if (!is.array(FCxreg) && !is.null(FCxreg)){
-      FCxreg <- array(FCxreg,c(length(FCxreg)/fh,fh))
-    }
-    
-    clrs <- colorRampPalette(brewer.pal(11,"Spectral")[c(1:5,8:11)])(length(perm_levels))
-    if (outplot == 2){
-      if (!is.null(FCseason) & !is.null(FCxreg)){
-        layout(matrix(c(1,1,1,1,2,3,4,5), 2, 4, byrow = TRUE))
-      } else if (!is.null(FCseason) | !is.null(FCxreg)){
-        layout(matrix(c(1,1,1,2,3,4), 2, 3, byrow = TRUE))
-      } else {
-        layout(matrix(c(1,1,2,3), 2, 2, byrow = TRUE))
-      }
-    } else {
-      layout(matrix(1, 1, 1, byrow = TRUE))
-    }
-    # Find min max
-    ymax <- max(c(max(forecasts),max(y)))
-    ymin <- min(c(min(forecasts),min(y)))
-    yminmax <- c(ymin - 0.1*(ymax-ymin),ymax + 0.1*(ymax-ymin))
-    # Plot prediction
-    cmp <- brewer.pal(3,"Set1")
-    plot(1:observations,y, type="l", col=cmp[2], xlab="", ylab="", 
-		  main="Forecast", xlim=c(1, observations+fh), ylim=yminmax)
-    lines((observations):(observations+fh),c(y[observations],forecasts), col=cmp[1])
-    if (outplot == 2){
-      # Plot Level
-      ymin <- min(FClevel)
-      ymax <- max(FClevel)
-      yminmax <- c(ymin - 0.1*(ymax-ymin),ymax + 0.1*(ymax-ymin))
-      plot(FClevel[1, ], type="l", col=clrs[1], xlab="", ylab="", main="Level", ylim=yminmax)
-      if (sum(perm_levels)>1){
-        for (i in 2:sum(perm_levels)){
-          lines(FClevel[i, ], type="l", col=clrs[i])
-        }
-      }
-      if (comb=="mean"){
-        FClevel.plot <- colMeans(FClevel)
-      } else if (comb=="median"){
-        FClevel.plot <- apply(FClevel,2,"median")
-      } else {
-        wghts <- 1/(minimumAL:maximumAL)
-        wghts.level <- wghts[perm_levels==1]/sum(wghts[perm_levels==1])
-        wghts.level <- matrix(rep(wghts.level,fh),ncol=fh)
-        FClevel.plot <- colSums(FClevel * wghts.level)
-      }
-      lines(FClevel.plot, type="l", col="black", lwd=2)
-      # Plot trend
-      ymin <- min(FCtrend)
-      ymax <- max(FCtrend)
-      yminmax <- c(ymin - 0.1*(ymax-ymin),ymax + 0.1*(ymax-ymin))
-      plot(FCtrend[1, ], type="l", col=clrs[1], xlab="", ylab="", main="Trend", 
-		    ylim=yminmax)
-      if (sum(perm_levels)>1){
-        for (i in 2:sum(perm_levels)){
-          lines(FCtrend[i, ], type="l", col=clrs[i])
-        }
-      }
-      if (comb=="mean"){
-        FCtrend.plot <- colMeans(FCtrend)
-      } else if (comb=="median"){
-        FCtrend.plot <- apply(FCtrend,2,"median")
-      } else {
-        FCtrend.plot <- colSums(FCtrend * wghts.level)
-      }
-      lines(FCtrend.plot, type="l", col="black", lwd=2)
-      # Plot season
-      if (!is.null(FCseason)){
-        ymin <- min(FCseason)
-        ymax <- max(FCseason)
-        yminmax <- c(ymin - 0.1*(ymax-ymin),ymax + 0.1*(ymax-ymin))
-        plot(FCseason[1, ], type="l", col=clrs[1], xlab="", ylab="", main="Season", ylim=yminmax)
-        if (dim(FCseason)[1]>1){
-          for (i in 2:sum(perm_levels==1 & perm_seas==1)){
-            lines(FCseason[i, ], type="l", col=clrs[i])
-          }
-        }
-        if (comb=="mean"){
-          FCseason.plot <- colMeans(FCseason)
-        } else if (comb=="median"){
-          FCseason.plot <- apply(FCseason,2,"median")
-        } else {
-          wghts.season <- wghts[perm_levels==1 & perm_seas==1]/sum(wghts[perm_levels==1 & perm_seas==1])
-          wghts.season <- matrix(rep(wghts.season,fh),ncol=fh)
-          FCseason.plot <- colSums(FCseason * wghts.season)
-        }
-        lines(FCseason.plot, type="l", col="black", lwd=2)
-      }
-      # Plot xreg
-      if (!is.null(FCxreg)){
-        ymin <- min(FCxreg)
-        ymax <- max(FCxreg)
-        yminmax <- c(ymin - 0.1*(ymax-ymin),ymax + 0.1*(ymax-ymin))
-        plot(FCxreg[1, ], type="l", col=clrs[1], xlab="", ylab="", main="Xreg", ylim=yminmax)
-        if (dim(FCxreg)[1]>1){
-          for (i in 2:sum(perm_levels==1)){
-            lines(FCxreg[i, ], type="l", col=clrs[i])
-          }
-        }
-        if (comb=="mean"){
-          FCxreg.plot <- colMeans(FCxreg)
-        } else if (comb=="median"){
-          FCxreg.plot <- apply(FCxreg,2,"median")
-        } else {
-          FCxreg.plot <- colSums(FCxreg * wghts.level)
-        }
-        lines(FCxreg.plot, type="l", col="black", lwd=2)
-      }
-    }
-  }
-}
-
-#-------------------------------------------------
-mapasimple <- function(y, ppy=NULL, fh=ppy, minimumAL=1, maximumAL=ppy, comb=c("w.mean","w.median","mean","median","wght"), 
-                       paral=c(0,1,2), display=c(0,1), outplot=c(0,1), hybrid=c(TRUE,FALSE), 
-                       model="ZZZ", type=c("ets","es"), xreg=NULL, pr.comp=0, ...){
-  # MAPA estimation and forecast
-  #  
-  # Inputs:
-  #   y           = In sample observations of a time series (vector)
-  #                 If y == "paper" then it prints paper reference
-  #   ppy         = Periods in a season of the time series at the sampled frequency.
-  #                 If y is a ts object then this is taken from its frequency,
-  #                 unless overriden. 
-  #   fh          = Forecast horizon. Default = ppy
-  #   minimumAL   = Lowest aggregation level to use. Default = 1, maximumAL>1
-  #   maximumAL   = Highest aggregation level to use. Default = ppy
-  #   comb        = Combination operator. This can be: "mean"; "median"; "wght" - where each 
-  #                 aggregation level is weighted inversly to aggregation; "w.mean" - level 
-  #                 and trend components are averaged, but seasonal and xreg follow the wght 
-  #                 combination; "w.median" - as w.mean, but with median. It is suggested that 
-  #                 for data with high sampling frequency to use one of the "w.mean" and "w.median".
-  #   paral       = Use parallel processing. 0 = no; 1 = yes (requires initialised cluster); 
-  #                 2 = yes and initialise cluster. Default is 0.
-  #   display     = Display calculation progress in console. 0 = no; 1 = yes. Default is 0.
-  #   outplot     = Provide output plot. 0 = no; 1 = time series and forecast only;
-  #                 2 = time series, forecasts and components. For the components the rainbow 
-  #                 colouring scheme is used. Red is aggregation level 1, followed by yellow, 
-  #                 green, cyan, blue and magenta for the higher aggregation levels. Default is 1. 
-  #   hybrid      = Provide hybrid forecasts, as in Kourentzes et al. paper. Default is TRUE  
-  #                 If minimumAL > 1 then the minimumAL ETS forecasts are used.  
-  #   model       = Allow only that type of ETS at each aggregation level. This follows similar
-  #                 coding to the ets function. The first letter refers to the error 
-  #                 type ("A", "M" or "Z"); the second letter refers to the trend 
-  #                 type ("N","A","Ad","M","Md", "Z", "X" or "Y"); and the third letter 
-  #                 refers to the season type ("N","A","M", "Z", "X" or "Y"). The letters mean: 
-  #                 "N"=none, "A"=additive, "M"=multiplicative, "Z"=automatically selected, 
-  #                 "X"=automatically select between none and additive and "Y"=automatically
-  #                 select between none and multiplicative. "X" and "Y" supported only by 
-  #                 type=="es". If used with type=="ets" a warning will be given and they will 
-  #                 default to "Z".  A "d" for trend implies damped. 
-  #                 By default model="ZZZ". If due to sample limitation ETS cannot be calculated 
-  #                 at an aggregation level for the selected model, then no estimation is done 
-  #                 for that specific level. For aggregation levels that seasonality becomes 
-  #                 1 then a non-seasonal model is estimated.
-  #   type        = What type of exponential smoothing implementation to use. "es" - use from 
-  #                 the smooth package; "ets" use from the forecast package
-  #   xreg        = Vector or matrix of exogenous variables to be included in the MAPA. 
-  #                 If matrix then rows are observations and columns are variables. 
-  #                 Must be at least as long as in-sample. Additional observations are unused.
-  #                 Note that including xreg will force type="es". 
-  #   pr.comp     = MAPAx can use principal component analysis to preprocess xreg. When comp is -1 
-  #                 then the number of retained components is chosen automatically. When comp=0 
-  #                 then no pre-processing is performed and the original xreg is used. Any other 
-  #                 value represents the number of principal components retained. 
-  #   ...         = Pass additional arguments to es and ets.
-  #
-  # Output:
-  #   forecasts   = Vector with forecasts
-  #   components  = array with MAPA components
+mapacomb.comp <- function(X,ALs,operator){
+# Combine a single component across aggregation levels
+#
+# Inputs:
+#   X           = Matrix of a component (aggregation levels x horizon).
+#   ALs         = Aggregation levels corresponding to the rows of X.
+#   operator    = "mean", "median" or "wght" - where each aggregation level 
+#                 is weighted inversly to aggregation. 
   
+  # No levels to combine, so the component does not contribute
+  if (dim(X)[1] == 0){
+    return(rep(0,dim(X)[2]))
+  }
+  
+  if (operator == "mean"){
+    out <- colMeans(X) # MAPA(mean) forecasts
+  } else if (operator == "median"){
+    # forecasts <- colSums(rbind(colMedians(level),colMedians(trend),
+    #                            colMedians(season)),na.rm=TRUE) # MAPA(median) forecasts
+    out <- apply(X,2,"median") # MAPA(median) forecasts
+  } else if (operator == "wght"){
+    # Weighted sum
+    wghts <- 1/ALs
+    wghts <- wghts/sum(wghts)
+    out <- colSums(X * wghts)
+  }
+  
+  return(out)
+  
+}
+
+#-------------------------------------------------
+#' MAPA Single Origin Forecast (Wrapper)
+#'
+#' @description
+#' The following function estimates MAPA and produces out-of-sample forecasts.
+#' It is not suggested, unless only simple single origin forecasts are required.
+#'
+#' @param y    In sample observations of a time series (vector). If y == "paper" then
+#'   it prints paper reference.
+#' @param ppy Periods in a season of the time series at the sampled frequency.
+#'   If insample is a ts object then this is taken from its frequency, unless overriden.
+#' @param fh Forecast horizon. Default = ppy.
+#' @param minimumAL Lowest aggregation level to use. Default = 1, maximumAL>1.
+#' @param maximumAL Highest aggregation level to use. Default = ppy.
+#' @param comb Combination operator. This can be: "mean"; "median"; "wght" - where each aggregation level is weighted inversly to aggregation; "w.mean" - level and trend components are averaged, but seasonal and xreg follow the wght combination; "w.median" - as w.mean, but with median. It is suggested that for data with high sampling frequency to use one of the "w.mean" and "w.median".
+#' @param paral    Use parallel processing. 0 = no; 1 = yes (requires initialised cluster); 2 = yes
+#'   and initialise cluster. Default is 0.
+#' @param display Display calculation progress in console. 0 = no; 1 = yes. Default is 0.
+#' @param outplot Provide output plot. 0 = no; 1 = time series and forecast only; 2 = time series, forecasts and components. For the components the spectral colouring scheme is used. Red is the lowest aggregation level and blue the highest. Default is 0.
+#' @param hybrid Provide hybrid forecasts, as in Kourentzes et al. paper. If minimumAL > 1 then the minimumAL ETS forecasts are used. Default is TRUE.
+#' @param model Allow only that type of ETS at each aggregation level. This follows similar coding to the ets function. The first letter refers to the error type ("A", "M" or "Z"); the second letter refers to the trend type ("N","A","Ad","M","Md", "Z", "X" or "Y"); and the third letter refers to the season type ("N","A","M", "Z", "X" or "Y"). The letters mean: "N"=none, "A"=additive, "M"=multiplicative, "Z"=automatically selected, "X"=automatically select between none and additive and "Y"=automatically select between none and multiplicative. A "d" for trend implies damped. "X" and "Y" supported only by type=="es". If used with type=="ets" a warning will be given and they will default to "Z". By default model="ZZZ". If due to sample limitation ETS cannot be calculated at an aggregation level for the selected model, then no estimation is done for that specific level. For aggregation levels that seasonality becomes 1 then a non-seasonal model is estimated.
+#' @param type What type of exponential smoothing implementation to use. "es" = use from the smooth package; "ets" = use from the forecast package. Default is "es"
+#' @param xreg Vector or matrix of exogenous variables to be included in the MAPA. If matrix then rows are observations and columns are variables. Must be at least as long as in-sample. Additional observations are unused. Note that including xreg will force type="es".
+#' @param pr.comp MAPAx can use principal component analysis to preprocess xreg. When comp is -1 then the number of retained components is chosen automatically. When comp=0 then no pre-processing is performed and the original xreg is used. Any other value represents the number of principal components retained.
+#' @param cl Cluster to use when paral=1, created with \code{parallel::makeCluster}. If NULL, a cluster named \code{cl} in the global environment is used, for compatibility with earlier versions.
+#' @param ... Pass additional arguments to es or ets.
+#'
+#' @return
+#' \item{forecast}{Vector with forecasts. If y is a ts object, then this is also a ts object.}
+#' \item{components}{Array with MAPA components.}
+#' \item{combined}{Combined components across aggregation levels.}
+#' The output is of class \code{mapa.calc}. See \code{\link{mapacalc}} and \code{\link{plot.mapa.calc}}.
+#'
+#' @details This function calls \emph{mapaest} and \emph{mapacalc} internally.
+#'
+#' Use \code{type="es"} for the \code{es} function of the \pkg{smooth} package, instead of the default \code{ets} function of the \pkg{forecast} package. See \code{\link{mapaest}} for details on the differences between the two and on the use of xreg.
+#'
+#' @references
+#'     \itemize{
+#'         \item{Kourentzes N., Petropoulos F., Trapero J.R. (2014) Improving forecasting by estimating time
+#' series structural components across multiple frequencies. \emph{International Journal of Forecasting}, \bold{30}(\bold{2}), 291--302.}
+#'         \item{Kourentzes N., Petropoulos F. (2015) Forecasting with multivariate temporal aggregation: The case of promotional modelling. \emph{International Journal of Production Economics}.}
+#'         \item{You can find more information about MAPA at Nikos' \href{https://kourentzes.com/forecasting/tag/mapa/}{blog}.}
+#'   }
+#'
+#' @author Nikolaos Kourentzes, \email{nikolaos@@kourentzes.com}; Fotios Petropoulos.
+#'
+#' @seealso \code{\link{mapa}}.
+#'
+#' @keywords ~mapa
+#' @examples
+#' # MAPA forecasts with ets from the forecast package (default)
+#' out <- mapasimple(admissions)
+#' print(out)
+#'
+#' # With es from the smooth package, 24 steps ahead, plotting forecasts and components
+#' out <- mapasimple(admissions, fh=24, type="es", outplot=2)
+#'
+#' # Weighted combination, without the hybrid forecasts
+#' out <- mapasimple(admissions, comb="wght", hybrid=FALSE)
+#'
+#' # MAPAx: xreg must contain the in-sample observations and the fh future values
+#' set.seed(1)
+#' x <- rnorm(length(admissions)+12)
+#' out <- mapasimple(admissions, fh=12, type="es", xreg=x)
+#' summary(out)
+#' @export
+mapasimple <- function(y, ppy=NULL, fh=NULL, minimumAL=1, maximumAL=ppy, comb=c("w.mean","w.median","mean","median","wght"), 
+                       paral=c(0,1,2), display=c(0,1), outplot=c(0,1,2), hybrid=c(TRUE,FALSE), 
+                       model="ZZZ", type=c("ets","es"), xreg=NULL, pr.comp=0, cl=NULL, ...){
   # Paper info
   if (!is.numeric(y)){
-    writeLines("Paper reference: ")
-    writeLines("Kourentzes N., Petropoulos F. and Trapero J.R. (2014)")
-    writeLines("Improving forecasting by estimating time series structural components")
-    writeLines(paste("across multiple frequencies. International Journal of Forecasting,", 
-                     " 30 (2), 291-302.",sep=""))
-    return(invisible())
+    return(mapa.paper())
   }  
   
   # Defaults
   comb <- match.arg(comb,c("w.mean","w.median","mean","median","wght"))
-  paral <- paral[1]
-  display <- display[1]
-  outplot <- outplot[1]
-  hybrid <- hybrid[1]
-  type <- type[1]
+  paral <- mapa.choice(paral,c(0,1,2),"paral")
+  display <- mapa.choice(display,c(0,1),"display")
+  outplot <- mapa.choice(outplot,c(0,1,2),"outplot")
+  hybrid <- mapa.choice(hybrid,c(TRUE,FALSE),"hybrid")
+  type <- match.arg(type,c("ets","es"))
   
   # Estimate MAPA
   mapafit <- mapaest(y=y, ppy=ppy, minimumAL=minimumAL, 
                      maximumAL=maximumAL, paral=paral, display=display, 
-                     outplot=outplot, model=model, type=type, xreg=xreg, pr.comp=pr.comp, ...)
+                     outplot=outplot, model=model, type=type, xreg=xreg, pr.comp=pr.comp, 
+                     cl=cl, ...)
   
   # If not horizon was given forecasts a full season
-  if (is.null(fh)){
-    idx.ppy <- which(colnames(mapafit)=="original.ppy")
-    fh <- as.numeric(mapafit[1,idx.ppy])
-  }
+  # This is handled by mapacalc, when fh=NULL
   
   # Produce in- and out-of-sample forecasts
   out <- mapacalc(y=y, mapafit=mapafit, fh=fh, comb=comb, 
@@ -454,7 +322,10 @@ mapaprcomp <- function(x,pr.comp){
   #
   # Inputs
   #   x          = xreg
-  #   pr.comp    = list containing list("pr.comp", "mean", "sd")
+  #   pr.comp    = list containing list("pr.comp", "mean", "sd", "rotation"). If 
+  #                rotation is provided, as is done when forecasting, it is reused 
+  #                instead of calculating the principal components again. This keeps 
+  #                the components consistent with the ones used in estimation.
   
   p <- dim(x)[2]
   
@@ -462,6 +333,7 @@ mapaprcomp <- function(x,pr.comp){
   comp <- pr.comp$pr.comp
   x.mn <- pr.comp$mean
   x.sd <- pr.comp$sd
+  x.rot <- pr.comp$rotation
   
   if (comp != 0){
     # Reduction is perfomed
@@ -475,25 +347,33 @@ mapaprcomp <- function(x,pr.comp){
       stop("The requested number of principal components exceeds the number of xreg variables.")
     }
     
-    # Calculate principal components
-    x.pr <- prcomp(x,center=FALSE,scale.=FALSE)
+    if (!is.null(x.rot)){
+      # Use the rotation from estimation
+      x.out <- x %*% x.rot
+    } else {
     
-    # If a nmber of components is provided then simply choose that and proceed
-    if (comp < 0){
-      # Select number of components automatically
-      # For this I am using Jolliffe's rule 
-      # Cangelosi, Richard, and Alain Goriely. "Component retention in principal component analysis with application to cDNA microarray data." Biology direct 2.1 (2007): 1.
-      ev <- x.pr$sdev^2
-      ev <- (1-1/nrow(x))*ev
-      comp <- sum(ev >= 0.7*mean(ev))
+      # Calculate principal components
+      x.pr <- prcomp(x,center=FALSE,scale.=FALSE)
+      
+      # If a nmber of components is provided then simply choose that and proceed
+      if (comp < 0){
+        # Select number of components automatically
+        # For this I am using Jolliffe's rule 
+        # Cangelosi, Richard, and Alain Goriely. "Component retention in principal component analysis with application to cDNA microarray data." Biology direct 2.1 (2007): 1.
+        ev <- x.pr$sdev^2
+        ev <- (1-1/nrow(x))*ev
+        comp <- sum(ev >= 0.7*mean(ev))
+      }
+      x.out <- x.pr$x[,1:comp,drop=FALSE]
+      x.rot <- x.pr$rotation[,1:comp,drop=FALSE]
+      
     }
-    x.out <- x.pr$x[,1:comp,drop=FALSE]
     
   } else {
     # No pre-processing
     x.out <- x
   }
   
-  return(list("x.out"=x.out,"pr.comp"=list("pr.comp"=comp,"mean"=x.mn,"sd"=x.sd)))
+  return(list("x.out"=x.out,"pr.comp"=list("pr.comp"=comp,"mean"=x.mn,"sd"=x.sd,"rotation"=x.rot)))
   
 }

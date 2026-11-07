@@ -1,30 +1,40 @@
-tsaggr <- function(y,fout,fmean=c(FALSE,TRUE),outplot=c(FALSE,TRUE)){
-# Non-overlapping temporal aggregation
-# 
-# Inputs:
-#   y             Time series vector (can be ts object).
-#   fout          Vector containing desirable aggregation levels. Must be positive
-#                 and integer. If larger than length(y) then it is ignored.
-#   fmean         If TRUE the aggregated is done using mean, otherwise sum is used. 
-#   outplot       If TRUE a plot of the original series and the aggregated ones is 
-#                 produced.
-#
-# Outputs:
-#   out           List of temporally aggregated series. If y was a ts object, then 
-#                 'out' has ts objects with appropriate frequencies. Any non-integer
-#                 frequency is set equal to 1. Series are named ALx, where x is the 
-#                 aggregation level.
-#   all           An array containing all aggregated series in the original frequency.
-#                 Series are named ALx, where x is the aggregation level.
-#   idx           List of indices used to produce 'out' from 'all': 
-#                 y.out[[i]] <- y.all[y.idx[[i]],i]
-#                 Series are named ALx, where x is the aggregation level.
-#
-# Example:
-#   out <- tsaggr(admissions,fout=2:12,fmean=TRUE,outplot=TRUE)
-#
-# Nikolaos Kourentzes, 2014 <nikolaos@kourentzes.com>  
-
+#' Non-overlapping temporal aggregation
+#'
+#' @description Non-overlapping temporal aggregation.
+#'
+#' @param y Time series vector (can be ts object).
+#' @param fout Vector containing desirable aggregation levels. Must be positive and integer. If larger than length(y) then it is ignored.
+#' @param fmean If TRUE the aggregated is done using mean, otherwise sum is used.
+#' @param outplot If TRUE a plot of the original series and the aggregated ones is produced.
+#' @param col.AL Vector of colours for the aggregated series in the plot. If NULL the spectral colouring scheme is used, with red the lowest and blue the highest aggregation level, as in the component plots of \code{\link{plot.mapa.calc}}.
+#' @param ... Additional arguments passed to \code{plot}, for example \code{main}, \code{xlab} and \code{ylab}.
+#'
+#' @return
+#' \item{out}{
+#'   List of temporally aggregated series. If y was a ts object, then 'out' has ts objects with appropriate frequencies. Any non-integer frequency is set equal to 1. Series are named ALx, where x is the aggregation level.
+#' }
+#' \item{all}{
+#'   An array containing all aggregated series in the original frequency. Series are named ALx, where x is the aggregation level.
+#' }
+#' \item{idx}{
+#'   List of indices used to produce 'out' from 'all': y.out[[i]] <- y.all[y.idx[[i]],i]. Series are named ALx, where x is the aggregation level.
+#' }
+#'
+#' @author Nikolaos Kourentzes, \email{nikolaos@@kourentzes.com}.
+#'
+#' @keywords ~tsaggr
+#' @examples
+#' # Aggregate to quarterly and annual series, using sums
+#' out <- tsaggr(admissions, fout=c(3,12))
+#' out$out$AL12
+#'
+#' # All aggregation levels from 2 to 12, using means, with a plot
+#' out <- tsaggr(admissions, fout=2:12, fmean=TRUE, outplot=TRUE, main="Admissions")
+#'
+#' # User defined colours for the aggregated series
+#' out <- tsaggr(admissions, fout=c(3,12), fmean=TRUE, outplot=TRUE, col.AL=c("blue","red"))
+#' @export
+tsaggr <- function(y,fout,fmean=c(FALSE,TRUE),outplot=c(FALSE,TRUE),col.AL=NULL,...){
   # Defaults
   fmean <- fmean[1]
   outplot <- outplot[1]
@@ -63,11 +73,9 @@ tsaggr <- function(y,fout,fmean=c(FALSE,TRUE),outplot=c(FALSE,TRUE)){
     # Find number of observations to drop from beginning
     slost[i] <- n %% fout[i]
     y.idx[[i]] <- seq((slost[i]+1),(n-fout[i]+1),fout[i])
-    nk <- length(y.idx[[i]])
     # Aggregate
-    for (j in 1:nk){
-      y.all[y.idx[[i]][j]:(y.idx[[i]][j]+fout[i]-1),i] <- sum(y[y.idx[[i]][j]:(y.idx[[i]][j]+fout[i]-1)])/scl[i]
-    }
+    yk <- colSums(matrix(y[(slost[i]+1):n],nrow=fout[i]))/scl[i]
+    y.all[(slost[i]+1):n,i] <- rep(yk,each=fout[i])
     # Produce aggregate series
     y.out[[i]] <- y.all[y.idx[[i]],i]
     if (!is.null(f)){
@@ -87,13 +95,18 @@ tsaggr <- function(y,fout,fmean=c(FALSE,TRUE),outplot=c(FALSE,TRUE)){
   
   # Produce plot
   if (outplot==TRUE){
-    ymin <- min(cbind(y,y.all),na.rm=TRUE)
-    ymax <- max(cbind(y,y.all),na.rm=TRUE)
-    ymin <- ymin - 0.1*(ymax-ymin)
-    ymax <- ymax + 0.1*(ymax-ymin)
-    cmp <- rainbow(k,start=0/6,end=4/6)
-    plot(as.numeric(y),col="black",type="l",ylab="",xlab="Period",lwd=2,
-         xaxs="i",yaxs="i",ylim=c(ymin,ymax))
+    # Same colouring scheme as the MAPA component plots
+    # cmp <- rainbow(k,start=0/6,end=4/6)
+    if (is.null(col.AL)){
+      cmp <- colorRampPalette(brewer.pal(11,"Spectral")[c(1:5,8:11)])(k)
+    } else {
+      cmp <- rep(col.AL,length.out=k)
+    }
+    # User arguments override defaults
+    args <- list(x=as.numeric(y),col="black",type="l",ylab="",xlab="Period",lwd=2,
+                 xaxs="i",yaxs="i",ylim=mapa.ylim(y,y.all))
+    args <- modifyList(args,list(...))
+    do.call(plot,args)
     for (i in 1:k){
       lines(y.all[,i],col=cmp[i],type="l")
       points((y.idx[[i]]+fout[i]-1),y.all[y.idx[[i]],i],pch=20,col=cmp[i])

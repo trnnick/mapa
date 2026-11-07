@@ -1,4 +1,4 @@
-Mutliple Aggregation Prediction Algorithm (MAPA)
+Multiple Aggregation Prediction Algorithm (MAPA)
 =======
 [![GitHub version](https://badge.fury.io/gh/trnnick%2Fmapa.svg)](https://badge.fury.io/gh/trnnick%2Fmapa)
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/MAPA?color=blue)](https://CRAN.R-project.org/package=MAPA)
@@ -13,10 +13,17 @@ Functions and wrappers for using the Multiple Aggregation Prediction Algorithm (
 More details can be found at: http://tinyurl.com/mapa-paper
 
 
-To install use:
+To install the development version from GitHub use:
 
-> if (!require("devtools")){install.packages("devtools")}
+```r
+if (!requireNamespace("remotes", quietly = TRUE)){install.packages("remotes")}
+remotes::install_github("trnnick/mapa")
+```
 
-> devtools::install_github("trnnick/mapa")
+To install the stable version from CRAN use:
+
+```r
+install.packages("MAPA")
+```
 
 _Happy forecasting!_
