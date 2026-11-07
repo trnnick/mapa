@@ -6,7 +6,8 @@ test_that("summary methods return tables", {
   s <- summary(fit)
   expect_s3_class(s, "summary.mapa.fit")
   expect_equal(s$table$AL, 1:12)
-  expect_true(all(c("Model","alpha","AICc") %in% colnames(s$table)))
+  expect_true(all(c("Model","alpha") %in% colnames(s$table)))
+  expect_false(any(c("nParam","AICc") %in% colnames(s$table)))
   expect_output(print(s), "ETS\\(")
   
   sc <- summary(mapacalc(admissions, fit, fh=6))
@@ -15,6 +16,7 @@ test_that("summary methods return tables", {
   
   sf <- summary(mapafor(admissions, fit, ifh=3, conf.lvl=0.9))
   expect_equal(rownames(sf$errors), c("t+1","t+2","t+3"))
+  expect_equal(colnames(sf$errors), c("N","ME","MAE","RMSE"))
   expect_output(print(sf), "In-sample errors")
   expect_output(print(mapafor(admissions, fit, ifh=3)), "t\\+1 MSE")
 })

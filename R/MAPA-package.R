@@ -31,7 +31,7 @@
 #'   \item{\code{\link{plot.mapa.fit}}}{Plot the components of the model fitted at each aggregation level.}
 #'   \item{\code{\link{plot.mapa.calc}}}{Plot the forecasts and, optionally, the forecasted components at each aggregation level.}
 #'   \item{\code{\link{plot.mapa.for}}}{Plot the in- and out-of-sample forecasts and the prediction intervals.}
-#'   \item{\code{\link[=summary.mapa.fit]{print}} and \code{\link{summary.mapa.fit}}}{Print and summarise each of the outputs: the fitted model, parameters and AICc at each aggregation level; the combined components for each horizon; and the in-sample errors for each horizon.}
+#'   \item{\code{\link[=summary.mapa.fit]{print}} and \code{\link{summary.mapa.fit}}}{Print and summarise each of the outputs: the fitted model and parameters at each aggregation level; the combined components for each horizon; and the in-sample errors for each horizon.}
 #' }
 #'
 #' @section Utilities:
@@ -68,5 +68,4 @@
 #' @importFrom stats frequency median qnorm ts prcomp sd time tsp
 #' @importFrom utils tail modifyList
 #' @importFrom smooth es modelType
-#' @importFrom greybox nparam AICc
 "_PACKAGE"

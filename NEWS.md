@@ -1,7 +1,7 @@
 # CHANGES IN MAPA VERSION 2.1.0 (07 NOV 2026)
 - new: New plot methods for mapa.calc and mapa.for. Plots accept user arguments, such as main, xlab, ylab, xlim, ylim, col and lwd, use the time index of ts inputs, and respect the user's graphical layout.
 - new: plot.mapa.calc can plot all or selected components.
-- new: New summary methods for mapa.fit (model, parameters and AICc at each aggregation level), mapa.calc (combined components for each horizon) and mapa.for (in-sample ME, MAE, MSE, RMSE and MAPE for each horizon).
+- new: New summary methods for mapa.fit (model and parameters at each aggregation level), mapa.calc (combined components for each horizon) and mapa.for (in-sample ME, MAE and RMSE for each horizon).
 - new; Forecasts of ts inputs are returned as ts objects.
 - new: mapaest, mapa, mapasimple, mapafor: new input cl, to provide an existing cluster for parallel processing.
 - new: mapafor and mapa: parallel processing is also used for the in-sample forecasts. mapa initialises a single cluster for estimation and forecasting.

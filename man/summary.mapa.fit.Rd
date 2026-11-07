@@ -30,11 +30,11 @@
 Print and summary methods for the outputs of mapaest, mapacalc, mapasimple, mapafor and mapa.
 }
 \details{
-The summary of \code{mapa.fit} reports for each aggregation level: the aggregated sample size, the seasonal periods, the fitted model, the smoothing parameters, the number of xreg variables, the number of parameters and the AICc. Levels that could not be estimated due to insufficient sample are marked.
+The summary of \code{mapa.fit} reports for each aggregation level: the aggregated sample size, the seasonal periods, the fitted model, the smoothing parameters and the number of xreg variables. Levels that could not be estimated due to insufficient sample are marked.
 
 The summary of \code{mapa.calc} reports the combined level, trend, season and xreg components for each horizon, alongside the forecasts.
 
-The summary of \code{mapa.for} reports the in-sample errors (ME, MAE, MSE, RMSE and, for positive data, MAPE) for each in-sample forecast horizon, and the out-of-sample forecasts with any prediction intervals.
+The summary of \code{mapa.for} reports the in-sample errors (ME, MAE and RMSE) for each in-sample forecast horizon, and the out-of-sample forecasts with any prediction intervals.
 
 The summaries are returned as objects, so their contents can be used directly, for example \code{summary(fit)$table}.
 }

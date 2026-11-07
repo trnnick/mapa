@@ -783,21 +783,14 @@ summary.mapa.for <- function(object,...){
     y <- as.numeric(object$y)
     n <- length(y)
     ifh <- dim(object$infor)[1]
-    err <- array(NA,c(ifh,6),dimnames=list(paste("t+",1:ifh,sep=""),
-                                          c("N","ME","MAE","MSE","RMSE","MAPE")))
+    err <- array(NA,c(ifh,4),dimnames=list(paste("t+",1:ifh,sep=""),
+                                          c("N","ME","MAE","RMSE")))
     for (h in 1:ifh){
       resid <- y[h:n] - object$infor[h, 1:(n-h+1)]
       err[h,"N"] <- sum(!is.na(resid))
       err[h,"ME"] <- mean(resid, na.rm=TRUE)
       err[h,"MAE"] <- mean(abs(resid), na.rm=TRUE)
-      err[h,"MSE"] <- mean(resid^2, na.rm=TRUE)
-      if (all(y > 0)){
-        err[h,"MAPE"] <- 100*mean(abs(resid)/y[h:n], na.rm=TRUE)
-      }
-    }
-    err[,"RMSE"] <- sqrt(err[,"MSE"])
-    if (all(is.na(err[,"MAPE"]))){
-      err <- err[,colnames(err)!="MAPE",drop=FALSE]
+      err[h,"RMSE"] <- sqrt(mean(resid^2, na.rm=TRUE))
     }
   } else {
     err <- NULL

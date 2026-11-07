@@ -548,11 +548,11 @@ print.mapa.fit <- function(x,...){
 #' @param ... Additional arguments, currently unused.
 #'
 #' @details
-#' The summary of \code{mapa.fit} reports for each aggregation level: the aggregated sample size, the seasonal periods, the fitted model, the smoothing parameters, the number of xreg variables, the number of parameters and the AICc. Levels that could not be estimated due to insufficient sample are marked.
+#' The summary of \code{mapa.fit} reports for each aggregation level: the aggregated sample size, the seasonal periods, the fitted model, the smoothing parameters and the number of xreg variables. Levels that could not be estimated due to insufficient sample are marked.
 #'
 #' The summary of \code{mapa.calc} reports the combined level, trend, season and xreg components for each horizon, alongside the forecasts.
 #'
-#' The summary of \code{mapa.for} reports the in-sample errors (ME, MAE, MSE, RMSE and, for positive data, MAPE) for each in-sample forecast horizon, and the out-of-sample forecasts with any prediction intervals.
+#' The summary of \code{mapa.for} reports the in-sample errors (ME, MAE and RMSE) for each in-sample forecast horizon, and the out-of-sample forecasts with any prediction intervals.
 #'
 #' The summaries are returned as objects, so their contents can be used directly, for example \code{summary(fit)$table}.
 #'
@@ -584,7 +584,7 @@ summary.mapa.fit <- function(object,...){
   # Table with information per aggregation level
   tbl <- data.frame("AL"=object$AL, "n"=object$q, "m"=object$ppyA, 
                     "Model"=NA, "alpha"=NA, "beta"=NA, "gamma"=NA, "phi"=NA,
-                    "Xreg"=0, "nParam"=NA, "AICc"=NA, stringsAsFactors=FALSE)
+                    "Xreg"=0, stringsAsFactors=FALSE)
   
   for (i in 1:k){
     if (!object$use[i]){
@@ -596,18 +596,12 @@ summary.mapa.fit <- function(object,...){
     tbl$Model[i] <- paste0("ETS(",paste0(components,collapse=","),")")
     if (object$type == "ets"){
       prm <- fit$par
-      tbl$nParam[i] <- length(prm) + 1
-      if (!is.null(fit$aicc)){
-        tbl$AICc[i] <- fit$aicc
-      }
     } else if (object$type == "es"){
       prm <- fit$persistence
       if (substr(components[2],2,2) == "d"){
         prm <- c(prm,"phi"=fit$phi)
       }
       tbl$Xreg[i] <- length(fit$initial$xreg)
-      tbl$nParam[i] <- nparam(fit)
-      tbl$AICc[i] <- AICc(fit)
     }
     for (prmname in c("alpha","beta","gamma","phi")){
       if (prmname %in% names(prm)){

@@ -9,7 +9,7 @@ Description: Functions and wrappers for using the Multiple Aggregation Predictio
 LazyData: yes
 License: GPL (>= 2)
 Depends: R (>= 4.1.0)
-Imports: forecast (>= 5.3), parallel, RColorBrewer, smooth (>= 4.0.0), greybox,
+Imports: forecast (>= 5.3), parallel, RColorBrewer, smooth (>= 4.0.0),
     grDevices, graphics, stats, utils
 Suggests: testthat (>= 3.0.0)
 Config/testthat/edition: 3
